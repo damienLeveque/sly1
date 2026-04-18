@@ -38,14 +38,14 @@ enum OPTID
 struct LO : public BASIC
 {
     /* 0x08 */ OID oid;
-    /* 0x10 */ DLE dleOid;
+    /* 0x0c */ DLE dleOid;
     /* 0x14 */ SW *psw;
     /* 0x18 */ ALO *paloParent;
     /* 0x1c */ DLE dleChild;
     /* 0x24 */ LO *ploCidNext;
     /* 0x28 */ MQ *pmqFirst;
     /* 0x2c */ CFrame *pframe;
-    /* 0x30 */ PXR *ppxr;
+    /* 0x30 */ PXR *ppxr; 
 };
 
 /**

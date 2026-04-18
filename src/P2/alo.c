@@ -6,11 +6,43 @@
 #include <shadow.h>
 #include <shd.h>
 #include <target.h>
+#include "vu0.h"
 
 extern VTACT g_vtactseg;
 extern SHADOW s_shadow;
 
-INCLUDE_ASM("asm/nonmatchings/P2/alo", FIsZeroV__FP6VECTOR);
+
+// Keep the structure of this function for the target assembly.
+int FIsZeroV(VECTOR *v) {
+    VU0_LOAD_VECTOR(v);
+    
+    VU0_SCRATCH_REG;
+    float dot, threshold;
+    int result = 1;
+    VU0_DOT_XYZ(dot, threshold);
+    if (dot < threshold) {
+    } else {
+        result = 0;
+    }
+    return result;
+}
+
+// This function matches 100% but has a 0x18 shift so the sha1sum doesn't match. 
+#ifdef SKIP_ASM
+int FIsZeroW(VECTOR *v) {
+    VU0_LOAD_VECTOR(v);
+    
+    VU0_SCRATCH_REG;
+    float dot, threshold;
+    int result = 1;
+    VU0_DOT_XYZ_EPS(dot, threshold);
+    if (dot < threshold) {
+    } else {
+        result = 0;
+    }
+    return result;
+}
+#endif // SKIP_ASM
 
 INCLUDE_ASM("asm/nonmatchings/P2/alo", FIsZeroW__FP6VECTOR);
 

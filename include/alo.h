@@ -157,54 +157,54 @@ struct XF
  */
 struct ALO : public LO
 {
-    /* 0x34 */ DL dlChild;
-    DLE dleBusy;
-    /* 0x54 */ DLE dleMRD;
-    ALO *paloRoot;
-    ALO *paloFreezeRoot;
-    DLE dleFreeze;
-    /* 0x60 */ DL dlFreeze;
-    int cpmrg;
-    MRG *apmrg;
-    /* 0x80 */ float sMRD;
-    /* 0x84 */ float sCelBorderMRD;
-    /* 0x88 */ int grfzon;
-    float dsMRDSnap;
+    DL dlChild; // 0x34
+    DLE dleBusy; // 0x40
+    DLE dleMRD; // 0x48
+    ALO *paloRoot; // 0x50
+    ALO *paloFreezeRoot; // 0x54
+    DLE dleFreeze; // 0x58
+    DL dlFreeze; // 0x60
+    int cpmrg; // 0x6c
+    MRG *apmrg; // 0x70,
+    float sMRD; // 0x74
+    float sCelBorderMRD; // 0x78
+    int grfzon; // 0x7c
+    float dsMRDSnap; // 0x80
     undefined4 unk_0x9c;
     STRUCT_PADDING(10); // int frz[10];
-    XF xf;
-    VECTOR posOrig;
-    MATRIX3 matOrig;
-    VECTOR eulOrig;
-    /* 0x1e0 */ DL dlAct;
-    ACT *pactPos;
-    ACT *pactRot;
-    ACT *pactScale;
-    ACT **apactPost;
-    ACT *pactRestore;
-    ACTLY *pactla;
-    ACTBANK *pactbank;
-    IKH *pikh;
-    CLQ *pclqPosSpring;
-    CLQ *pclwPosDamping;
-    CLQ *pclqRotSpring;
+    XF xf; 
+    VECTOR posOrig; 
+    MATRIX3 matOrig; 
+    VECTOR eulOrig; 
+    DL dlAct;  
+    ACT *pactPos; 
+    ACT *pactRot; 
+    ACT *pactScale; 
+    ACT **apactPost; 
+    ACT *pactRestore; 
+    ACTLY *pactla; 
+    ACTBANK *pactbank; 
+    IKH *pikh; 
+    CLQ *pclqPosSpring; 
+    CLQ *pclwPosDamping; 
+    CLQ *pclqRotSpring; 
     CLQ *pclqRotDamping;
-    SMPA *psmpaPos;
-    SMPA *psmapaRot;
+    SMPA *psmpaPos; 
+    SMPA *psmapaRot; 
     ALOX *palox;
-    /* 0x228 */ int cframeStatic;
-    /* 0x22c */ STRUCT_PADDING(22); // GLOBSET globset;
-    /* 0x284 */ SHADOW *pshadow;
-    /* 0x288 */ THROB *pthrob;
-    /* 0x28c */ float sFastShadowRadius;
-    /* 0x290 */ float sFastShadowDepth;
+    int cframeStatic;
+    STRUCT_PADDING(22); // GLOBSET globset;
+    SHADOW *pshadow;
+    THROB *pthrob;
+    float sFastShadowRadius;
+    float sFastShadowDepth;
     int fRealClock;
     FADER *pfader;
     float dtUpdatePause;
     ASEGD *pasegd;
     float sRadiusRenderSelf;
     float sRadiusRenderAll;
-    /* 0x2ac */ SFX *psfx;
+    SFX *psfx;
     STRUCT_PADDING(25);
     FICG ficg;
     STRUCT_PADDING(1); // ???

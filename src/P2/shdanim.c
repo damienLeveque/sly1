@@ -11,16 +11,6 @@
 #define INV_TWO_PI 0.15915494f
 
 
-extern CLOCK g_clock;
-extern VTSAA D_0021E358; // Loop
-extern VTSAA D_0021E378; // PingPong
-extern VTSAA D_0021E398; // Shuffle
-extern VTSAA D_0021E3B8; // Hologram
-extern VTSAA D_0021E3D8; // Scroller
-extern VTSAA D_0021E3F8; // Circler
-extern VTSAA D_0021E418; // Looker
-extern VTSAA D_0021E438; // Eyes
-
 int CbFromSaak(SAAK saak)
 {
     switch (saak) {

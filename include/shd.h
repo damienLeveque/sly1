@@ -17,6 +17,9 @@
 typedef struct SHD; // Forward declaration
 typedef struct SHDP; // Forward declaration
 
+extern SAI *D_00274544; // Global SAI list head (for shader animation updates)
+extern SAI *D_0027451C; // Global SAI list tail (for shader animation updates)
+
 typedef int GRFZON;
 
 /**
@@ -113,9 +116,9 @@ struct TEX : public TEXF
 
 struct SAIR
 {
-    SHDP *pshdp;
-    SUR *psur;
-    SAIR *psairNext;
+    SHDP *pshdp; // 0x00
+    SUR *psur; // 0x04
+    SAIR *psairNext; // 0x08
 };
 
 /**
@@ -128,8 +131,8 @@ struct SAI
     SHD *pshd; // 0x14
     int iframe; // 0x18
     TCX txt; // 0x1c
-    SAIR *psairFirst; // 0x2c
-    SAI *psaiNext; // 0x30
+    SAIR *psairFirst; // 0x24
+    SAI *psaiNext;  // 0x28
 };
 
 

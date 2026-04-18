@@ -63,7 +63,37 @@ JUNK_ADDIU(50);
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", PshdFindShader__F3OID);
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", SetSaiIframe__FP3SAIi);
+void SetSaiIframe(SAI *psai, int iframe)
+{
+    int iframeMax;
+
+    if (psai->pshd == 0)
+        return;
+
+    iframeMax = psai->pshd->cframe - 1;
+
+    if (iframe < 0)
+        iframe = 0;
+    else if (iframeMax < iframe)
+        iframe = iframeMax;
+
+    if (psai->iframe == iframe)
+        return;
+
+    psai->iframe = iframe;
+
+    if (psai->psaiNext != 0)
+        return;
+
+    if (psai == D_00274544)
+        return;
+
+    if (D_00274544 == 0)
+        D_00274544 = psai;
+
+    psai->psaiNext = D_0027451C;
+    D_0027451C = psai;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", SetSaiDuDv__FP3SAIff);
 
