@@ -12,6 +12,10 @@
 #include <shd.h>
 #include <sce/libdma.h>
 
+/** 
+    @brief Graphics synthesizer buffer. 
+*/
+
 struct GSB
 {
     int igsMin;
@@ -54,5 +58,9 @@ void StartupGs();
 void ClearFrameBuffers();
 
 void UploadBitmaps(GRFZON grfzon, GSB *pgsb);
+
+void RebaseSurs(int isur, int cb, void *pvOld, void *pvNew);
+
+void PropagateSur(SUR *psur);
 
 #endif // GS_H

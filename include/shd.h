@@ -16,11 +16,38 @@
 
 typedef struct SHD; // Forward declaration
 typedef struct SHDP; // Forward declaration
+typedef int GRFZON;
+
+// Forward declarations
 
 extern SAI *D_00274544; // Global SAI list head (for shader animation updates)
 extern SAI *D_0027451C; // Global SAI list tail (for shader animation updates)
 
-typedef int GRFZON;
+extern int D_002744F8; // Number of loaded shaders
+extern SHD *D_002744FC; // Array of loaded shaders
+
+extern int D_0027453C; // Number of active shader animations
+extern SAA **D_00274540; // Array of active shader animations
+
+// Misc shader state
+extern int D_00274500;
+extern int D_00274504;
+extern int D_00274508;
+extern int D_0027450C;
+extern char D_00274520[0x18];
+
+/*
+ * @brief Global font pointer.
+ */
+extern int D_00262260;
+extern int D_00262264;
+extern char D_00262268[0x14];
+
+extern QW *g_aqwGifsBackgroundUpload;
+extern GRFZON g_grfzonShaders;
+extern byte *g_pbBulkData;
+
+extern void ResetGsMemory(void);
 
 /**
  * @brief (?) kind.

@@ -1,8 +1,7 @@
 #include <shd.h>
 #include <gs.h>
-
-extern GRFZON g_grfzonShaders;
-extern byte *g_pbBulkData;
+#include <shdanim.h>
+#include <sce/memset.h>
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", Tex0FromTexIframeCtk__FP3TEXi3CTK);
 
@@ -44,7 +43,29 @@ INCLUDE_ASM("asm/nonmatchings/P2/shd", PropagateShaders__Fi);
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", FillShaders__Fi);
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", UnloadShaders__Fv);
+void UnloadShaders()
+{
+    D_002744F8 = 0;
+    D_002744FC = 0;
+    D_00274500 = 0;
+    D_00274504 = 0;
+    D_00274508 = 0;
+    D_0027450C = 0;
+    g_pfont = 0;
+    D_00262260 = 0;
+    D_00262264 = 0;
+
+    memset(D_00262268, 0, 0x14);
+    g_grfzonShaders = 0;
+    D_0027453C = 0;
+    D_00274540 = 0;
+    D_0027451C = 0;
+    D_00274544 = 0;
+    
+    memset(D_00274520, 0, 0x18);
+    g_aqwGifsBackgroundUpload = 0;
+    ResetGsMemory();
+}
 
 JUNK_WORD(0xE4A00008);
 
@@ -61,7 +82,26 @@ JUNK_NOP();
 JUNK_NOP();
 JUNK_ADDIU(50);
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", PshdFindShader__F3OID);
+SHD *PshdFindShader(OID oid)
+{
+    int i;
+    
+    if (oid == -1)
+        return 0;
+    
+    i = 0;
+
+    if (D_002744F8 > 0) {
+        SHD *pshd = D_002744FC;    
+        for (; i < D_002744F8; i++) {
+            if (pshd->oid == oid)
+                return pshd;
+            pshd++;
+        }
+    }
+
+    return 0;
+}
 
 void SetSaiIframe(SAI *psai, int iframe)
 {
@@ -95,8 +135,80 @@ void SetSaiIframe(SAI *psai, int iframe)
     D_0027451C = psai;
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", SetSaiDuDv__FP3SAIff);
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", PropagateSais__Fv);
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", UpdateShaders__Ff);
+void SetSaiDuDv(SAI *psai, float du, float dv)
+{
+    if (psai->pshd == 0)
+        return;
+
+    if (psai->txt.du == du && psai->txt.dv == dv)
+        return;
+
+    psai->txt.du = du;
+    psai->txt.dv = dv;
+
+    if (psai->psaiNext != 0)
+        return;
+
+    if (psai == D_00274544)
+        return;
+
+    if (D_00274544 == 0)
+        D_00274544 = psai;
+
+    psai->psaiNext = D_0027451C;
+    D_0027451C = psai;
+}
+void PropagateSais(void)
+{
+    SAI *psai;
+
+    psai = D_0027451C;
+    if (psai != 0) {
+        do {
+            SAIR *psair = psai->psairFirst;
+            if (psair != 0) {
+                do {
+                    if (psai->grfsai & 1) {
+                        SHDP *pshdp = psair->pshdp;
+                        psair->psur->pvSrc =
+                            (char *)pshdp->aaqwRegs +
+                            (psai->iframe * pshdp->cqwRegs * 0x10);
+                    }
+
+                    PropagateSur(psair->psur);
+                    psair = psair->psairNext;
+                } while (psair != 0);
+            }
+
+            {
+                SAI *next = psai->psaiNext;
+                psai->psaiNext = 0;
+                psai = next;
+            }
+        } while (psai != 0);
+    }
+
+    D_0027451C = 0;
+    D_00274544 = 0;
+}
+
+void UpdateShaders(float dt)
+{
+    int i;
+
+    i = 0;
+    if (D_0027453C > 0) {
+        do {
+            SAA *psaa = D_00274540[i];
+
+            if (FUpdatableSaa(psaa) != 0) {
+                if (psaa->pvtsaa->pfnUpdate != 0)
+                    psaa->pvtsaa->pfnUpdate(psaa, dt);
+            }
+
+            i += 1;
+        } while (i < D_0027453C);
+    }
+}

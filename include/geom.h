@@ -26,7 +26,7 @@ struct EDGE
 };
 
 /**
- * @brief Unknown.
+ * @brief Surface in a geometry.
  */
 struct SUR
 {
