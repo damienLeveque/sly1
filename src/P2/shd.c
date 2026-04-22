@@ -1,11 +1,74 @@
 #include <shd.h>
 #include <gs.h>
 #include <shdanim.h>
+#include <memory.h>
+#include <types.h>
 #include <sce/memset.h>
+#include <sdk/ee/eestruct.h>
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", Tex0FromTexIframeCtk__FP3TEXi3CTK);
+sceGsTex0 Tex0FromTexIframeCtk(TEX *ptex, int iframe, CTK ctk)
+{
+    SHD  *pshd  = ptex->pshd;
+    BMP  *pbmp  = ptex->apbmp[iframe];
+    int   cctk  = (pshd->shdk == 0) ? 3 : 1;
+    CLUT *pclut = ptex->apclut[iframe * cctk + ctk];
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", PackTexGifs__FP3TEXi3CTK4SHDKP4GIFS);
+    sceGsTex0 tex0 = pbmp->tex0;
+    if (pclut != 0) {
+        *(u64 *)&tex0 |= *(u64 *)&pclut->tex2;
+    }
+    return tex0;
+}
+
+void PackTexGifs(TEX *tex, int iframe, CTK ctk, SHDK shdk, GIFS *gifs)
+{
+    u64 reg0;
+    u64 reg1;
+    u64 reg2;
+    u64 reg3;
+    u64 reg4;
+    sceGsTex0 tex0s;
+    u64 tex0;
+    int tmp;
+
+    tmp = shdk ^ 5;
+
+    memset(&reg0, 0, 8);
+    memset(&reg1, 0, 8);
+    memset(&reg2, 0, 8);
+    memset(&reg3, 0, 8);
+    memset(&reg4, 0, 8);
+
+    tex0s = Tex0FromTexIframeCtk(tex, iframe, ctk);
+    tex0 = *(u64 *)&tex0s;
+
+    reg0 = tex0;
+    gifs->PackAD(tmp ? 6 : 7, reg0);
+
+    reg1 |= 1;
+    reg1 |= 0x20;
+    reg1 &= (u64)-0x1C1;
+    reg1 |= 0x40;
+    gifs->PackAD(tmp ? 0x14 : 0x15, reg1);
+
+    {
+        unsigned short flags = *(unsigned short *)((char *)tex + 2);
+        if (flags & 1) {
+            reg4 &= (u64)-4;
+            reg4 |= 1;
+        }
+    }
+
+    {
+        unsigned short flags = *(unsigned short *)((char *)tex + 2);
+        if (flags & 2) {
+            reg4 &= (u64)-0xD;
+            reg4 |= 4;
+        }
+    }
+
+    gifs->PackAD(tmp ? 8 : 9, reg4);
+}
 
 void LoadClutFromBrx(CBinaryInputStream *pbis, CLUT *pclut)
 {
@@ -27,7 +90,35 @@ INCLUDE_ASM("asm/nonmatchings/P2/shd", LoadBitmapsFromBrx__FP18CBinaryInputStrea
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", LoadFontsFromBrx__FP18CBinaryInputStream);
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", LoadTexFromBrx__FP18CBinaryInputStreamP3TEX);
+void LoadTexFromBrx(CBinaryInputStream *pbis, TEX *ptex)
+{
+    int i;
+
+    pbis->Read(6, ptex);
+
+    if (ptex->cibmp != 0) {
+        ptex->apbmp = (BMP **)PvAllocSwImpl(ptex->cibmp * 4);
+
+        for (i = 0; i < ptex->cibmp; i++) {
+            unsigned short ibmp = pbis->U16Read();
+            ptex->apbmp[i] = (BMP *)((char *)D_00274504 + (ibmp << 5));
+        }
+    }
+
+    if (ptex->ciclut != 0) {
+        ptex->apclut = (CLUT **)PvAllocSwImpl(ptex->ciclut * 4);
+
+        for (i = 0; i < ptex->ciclut; i++) {
+            unsigned short iclut = pbis->U16Read();
+
+            if (iclut == 0xFFFF) {
+                ptex->apclut[i] = 0;
+            } else {
+                ptex->apclut[i] = (CLUT *)((char *)D_0027450C + iclut * 0x18);
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", LoadShadersFromBrx__FP18CBinaryInputStream);
 

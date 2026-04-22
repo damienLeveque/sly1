@@ -4,6 +4,7 @@
 #include <clock.h>
 #include <vtables.h>
 #include <glob.h>
+#include <memory.h>
 #include <render.h>
 #include <math.h>
 
@@ -42,7 +43,27 @@ VTSAA *PvtsaaFromSaak(SAAK saak)
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/shdanim", PsaaLoadFromBrx__FP18CBinaryInputStream);
+SAA *PsaaLoadFromBrx(CBinaryInputStream *pbis)
+{
+    SAAK saak;
+    SAA *psaa;
+    SAAF saaf;
+
+    saak = (SAAK)pbis->U16Read();
+    if (saak) {
+        psaa = (SAA *)PvAllocSwClearImpl(CbFromSaak(saak));
+        psaa->pvtsaa = PvtsaaFromSaak(saak);
+        psaa->saak = saak;
+    
+        pbis->Read(0x1C, &saaf);
+        psaa->pvtsaa->pfnInit(psaa, &saaf);
+    
+        return psaa;
+    }
+    else {
+        return 0;
+    }  
+}
 
 void InitSaa(SAA *psaa, SAAF *psaaf) {
 
