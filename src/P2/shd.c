@@ -86,7 +86,34 @@ void LoadBmpFromBrx(CBinaryInputStream *pbis, BMP *pbmp)
     pbmp->cqwPixels = pbmp->cbPixels + 0xf >> 4;
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", LoadBitmapsFromBrx__FP18CBinaryInputStream);
+void LoadBitmapsFromBrx(CBinaryInputStream *pbis)
+{
+    int i = 0;
+
+    D_00274500 = pbis->U16Read();
+    D_00274504 = (BMP *)PvAllocSwClearImpl(D_00274500 << 5);
+    D_00274510 = 0;
+
+    if (D_00274500 > 0) {
+        do {
+            char *off;
+
+            off = (char *)(i << 5);
+            LoadBmpFromBrx(pbis, (BMP *)((char *)D_00274504 + (int)off));
+
+            off = (char *)D_00274504 + (int)off;
+            if ((((BMP *)off)->grfzon & 0x10000000) != 0) {
+                D_00274510++;
+            }
+
+            i++;
+        } while (i < D_00274500);
+    }
+
+    if (D_00274510 < (D_00274500 - D_00274510)) {
+        D_00274510 = D_00274500 - D_00274510;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", LoadFontsFromBrx__FP18CBinaryInputStream);
 

@@ -17,6 +17,7 @@
 typedef struct SHD; // Forward declaration
 typedef struct SHDP; // Forward declaration
 typedef int GRFZON;
+typedef struct BMP;
 
 // Forward declarations
 
@@ -31,8 +32,9 @@ extern SAA **D_00274540; // Array of active shader animations
 
 // Misc shader state
 extern int D_00274500;
-extern int D_00274504;
+extern BMP *D_00274504;
 extern int D_00274508;
+extern int D_00274510;
 extern int D_0027450C;
 extern char D_00274520[0x18];
 
