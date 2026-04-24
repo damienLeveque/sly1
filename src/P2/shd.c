@@ -191,7 +191,21 @@ INCLUDE_ASM("asm/nonmatchings/P2/shd", ConvertRgbToHsv__FP6VECTORT0);
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", ConvertHsvToRgb__FP6VECTORT0);
 
-INCLUDE_ASM("asm/nonmatchings/P2/shd", ConvertUserHsvToUserRgb__FP6VECTORT0);
+void ConvertUserHsvToUserRgb(VECTOR *pvecHSV, VECTOR *pvecRGB)
+{
+    VECTOR hsv;
+
+    *(qword *)&hsv = *(qword *)pvecHSV;
+
+    hsv.y *= 0.0039215689f;
+    hsv.z *= 0.0039215689f;
+
+    ConvertHsvToRgb(&hsv, pvecRGB);
+
+    pvecRGB->x *= 255.0f;
+    pvecRGB->y *= 255.0f;
+    pvecRGB->z *= 255.0f;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/shd", ConvertUserRgbToUserHsv__FP6VECTORT0);
 
