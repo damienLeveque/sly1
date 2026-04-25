@@ -269,6 +269,18 @@ struct VTSAA
     void* pfnUnk1C;                                 
 };
 
+struct CRV;
+struct VECTOR;
+struct VTCRV {
+    void* unk00;                                     // Offset 0x00
+    void (*func04)(CRV*, float, VECTOR*, VECTOR*);  // Offset 0x04
+    void* unk08;
+    void* unk0C;
+    void* unk10;
+    void* unk14;
+    float (*func18)(CRV*, float, VECTOR*, VECTOR*); // Offset 0x18
+};
+
 /**
  * @brief VT for an act related struct.
  */

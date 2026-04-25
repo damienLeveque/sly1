@@ -2,9 +2,60 @@
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", SMeasureApos__FiP6VECTORPf);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", GWrapApos__FfiPfi);
+float GWrapApos(float g, int cpos, float *apos, int fClosed)
+{
+    float gMin;
+    float gMax;
+    float dg;
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", IposFindAposG__FfiPfiT2T2);
+    if (fClosed) {
+        gMin = apos[0];
+        gMax = apos[cpos - 1];
+        dg = gMax - gMin;
+
+        if (g < gMin) {
+            g += dg;
+            while (g < gMin) {
+                g += dg;
+            }
+        }
+
+        if (gMax < g) {
+            do {
+                g -= dg;
+            } while (g > gMax); 
+        }
+    }
+
+    return g;
+}
+
+int IposFindAposG(float g, int cpos, float* apos, int fClosed, float* out1, float* out2) {
+    float wrapped = GWrapApos(g, cpos, apos, fClosed);
+    int i;
+
+    for (i = 1; i < cpos; i++) {
+        if (wrapped < apos[i]) {
+            break;
+        }
+    }
+
+    if (i >= cpos) {
+        i--;
+    }
+    
+    i--;
+
+    if (out1 != 0) {
+        *out1 = wrapped - apos[i];
+    }
+
+    if (out2 != 0) {
+        *out2 = apos[i + 1] - apos[i];
+    }
+
+    return i;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", EvaluateAposG__FfiP6VECTORPfiT2T2);
 
@@ -16,19 +67,37 @@ INCLUDE_ASM("asm/nonmatchings/P2/crv", ConvertApos__FiP6VECTORP7MATRIX4T2);
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", PcrvNew__F4CRVK);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", SFromCrvU__FP3CRVf);
+float SFromCrvU(CRV *crv, float u)
+{
+    return 0.0f;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", UFromCrvS__FP3CRVf);
+float UFromCrvS(CRV *crv, float s)
+{
+    return 0.0f;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", IcvFindCrvU__FP3CRVfPfT2);
+int IcvFindCrvU(CRV *crv, float u, float *pg0, float *pg1)
+{
+    return IposFindAposG(u, crv->ccv, crv->mpicvu, crv->fClosed, pg0, pg1);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", IcvFindCrvS__FP3CRVfPfT2);
+int IcvFindCrvS(CRV *crv, float s, float *pg0, float *pg1)
+{
+    return IposFindAposG(s, crv->ccv, crv->mpicvs, crv->fClosed, pg0, pg1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", GMeasureCrvU__FP5CRVMCf);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", UMaxCrv__FP3CRV);
+float UMaxCrv(CRV *crv)
+{
+    return crv->mpicvu[crv->ccv - 1];
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", SMaxCrv__FP3CRV);
+float SMaxCrv(CRV *crv)
+{
+    return crv->mpicvs[crv->ccv - 1];
+}
 
 JUNK_ADDIU(A0);
 
@@ -42,9 +111,15 @@ INCLUDE_ASM("asm/nonmatchings/P2/crv", DuGetCrvSearchIncrement__FP3CRV);
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", LoadCrvlFromBrx__FP4CRVLP18CBinaryInputStream);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", EvaluateCrvlFromU__FP4CRVLfP6VECTORT2);
+void EvaluateCrvlFromU(CRVL *crvl, float u, VECTOR *out1, VECTOR *out2)
+{
+    EvaluateAposG(u, crvl->ccv, crvl->mpicvpos, crvl->mpicvu, crvl->fClosed, out1, out2);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", EvaluateCrvlFromS__FP4CRVLfP6VECTORT2);
+void EvaluateCrvlFromS(CRVL *crvl, float s, VECTOR *out1, VECTOR *out2)
+{
+    EvaluateAposG(s, crvl->ccv, crvl->mpicvpos, crvl->mpicvs, crvl->fClosed, out1, out2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", RenderCrvlSegment__FP4CRVLiP7MATRIX4P2CMG4RGBAi);
 
@@ -52,7 +127,19 @@ INCLUDE_ASM("asm/nonmatchings/P2/crv", ConvertCrvl__FP4CRVLP7MATRIX4T1);
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", SFromCrvlU__FP4CRVLf);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", UFromCrvlS__FP4CRVLf);
+float UFromCrvlS(CRVL *crvl, float s)
+{
+    int icv;
+    float g0;
+    float g1;
+    float r;
+
+    icv = IcvFindCrvS((CRV *)crvl, s, &g0, &g1);
+
+    r = g0 / g1;
+
+    return ((1.0f - r) * crvl->mpicvu[icv]) + (r * crvl->mpicvu[icv + 1]);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", MeasureCrvl__FP4CRVL);
 
@@ -64,7 +151,10 @@ INCLUDE_ASM("asm/nonmatchings/P2/crv", FindCrvlClosestPointFromS__FP4CRVLP6VECTO
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", LoadCrvcFromBrx__FP4CRVCP18CBinaryInputStream);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", InvalidateCrvcCache__FP4CRVC);
+void InvalidateCrvcCache(CRVC *crvc)
+{
+    crvc->icvCache = -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", FillCrvcCache__FP4CRVCi);
 
