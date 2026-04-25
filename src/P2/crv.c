@@ -1,4 +1,6 @@
 #include <crv.h>
+#include <memory.h>
+#include <mark.h>
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", SMeasureApos__FiP6VECTORPf);
 
@@ -63,9 +65,55 @@ INCLUDE_ASM("asm/nonmatchings/P2/crv", FindAposClosestPointAll__FP6VECTORP6CONST
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", FindAposClosestPointSegment__FP6VECTORP6CONSTRiT0iiT0T0PiPf);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", ConvertApos__FiP6VECTORP7MATRIX4T2);
+void ConvertApos(int ccv, VECTOR* mpicvpos, MATRIX4* m1, MATRIX4* m2) {
+    MATRIX4 local_matrix;
+    
+    /**
+    * We need a 16 byte aligned temporary variable to store the result of the matrix-vector multiplication, 
+    * since the function expects it. We can then copy the result back to the original vector after the multiplication.
+    */
+    typedef struct {
+        float x, y, z, w;
+    } __attribute__((aligned(16))) vec16_t;
+    
+    vec16_t local_vector;
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", PcrvNew__F4CRVK);
+    CalculateDmat4(m2, m1, &local_matrix);
+    
+    int i;
+    for (i = 0; i < ccv; i++) {
+        MultiplyMatrix4Vector(&local_matrix, mpicvpos, 1.0f, (VECTOR*)&local_vector);
+        *(vec16_t*)mpicvpos = local_vector;
+        mpicvpos = (VECTOR*)((char*)mpicvpos + 16);
+    }
+}
+
+CRV *PcrvNew(CRVK crvk)
+{
+    CRV *crv;
+
+    switch (crvk) {
+        case 0: 
+            crv = (CRV *)PvAllocSwClearImpl(0x1C);
+            crv->vtable = &D_002176D0;
+            break;
+            
+        case 1: 
+            crv = (CRV *)PvAllocSwClearImpl(0x1D0);
+            crv->vtable = &D_00217708;
+            break;
+            
+        default:
+            crv = 0;
+            break;
+    }
+
+    if (crv != 0) {
+        crv->crvk = crvk;
+    }
+
+    return crv;
+}
 
 float SFromCrvU(CRV *crv, float u)
 {
@@ -101,7 +149,19 @@ float SMaxCrv(CRV *crv)
 
 JUNK_ADDIU(A0);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", SMeasureCrvSegmentU__FP5CRVMSf);
+float SMeasureCrvSegmentU(CRVMS* crvms, float u) {
+    VECTOR local_vector;
+    float local_float1;
+    float local_float2;
+
+    if (crvms->crv->vtable->func04 != 0) {
+        crvms->crv->vtable->func04(crvms->crv, u, &local_vector, 0);
+    }
+
+    FindClosestPointOnLineSegment(&local_vector, crvms->vec1, crvms->vec2, &local_float1, &local_float2);
+
+    return local_float2;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", FindCrvClosestPointOnLineSegmentFromU__FP3CRVP6VECTORT1fT1T1PfT6);
 
@@ -123,9 +183,20 @@ void EvaluateCrvlFromS(CRVL *crvl, float s, VECTOR *out1, VECTOR *out2)
 
 INCLUDE_ASM("asm/nonmatchings/P2/crv", RenderCrvlSegment__FP4CRVLiP7MATRIX4P2CMG4RGBAi);
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", ConvertCrvl__FP4CRVLP7MATRIX4T1);
+void ConvertCrvl(CRVL* crvl, MATRIX4* m1, MATRIX4* m2) {
+    ConvertApos(crvl->ccv, crvl->mpicvpos, m1, m2);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/crv", SFromCrvlU__FP4CRVLf);
+float SFromCrvlU(CRVL* crvl, float u) {
+    float du;
+    float length;
+    
+    int icv = IcvFindCrvU((CRV*)crvl, u, &du, &length);
+    
+    float t = du / length;
+    
+    return (1.0f - t) * crvl->mpicvs[icv] + t * crvl->mpicvs[icv + 1];
+}
 
 float UFromCrvlS(CRVL *crvl, float s)
 {
