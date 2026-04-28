@@ -7,9 +7,15 @@
 #include "common.h"
 #include <vec.h>
 #include <mat.h>
+#include <cm.h>
+
+struct CONSTR;
 
 extern VTCRV D_002176D0;
 extern VTCRV D_00217708;
+extern float D_00249FCC;
+extern float D_00249FC8;
+extern float D_00249FD0;
 
 /**
  * @brief Curve interpolation kind.
@@ -27,13 +33,13 @@ enum CRVK
  */
 struct CRV
 {
-    VTCRV* vtable;
+    VTCRV* pvtable;
     CRVK crvk;
     int fClosed;
     int ccv;
-    float *mpicvu;
-    float *mpicvs;
-    VECTOR *mpicvpos;
+    float *picvu;
+    float *picvs;
+    VECTOR *picvpos;
 };
 
 /**
@@ -48,13 +54,14 @@ struct CRVL : CRV
 /**
  * @brief Curve with cubic interpolation.
 */
-struct CRVC : CRV {
-    VECTOR *mappos;          // 0x1C
-    float *mapos;            // 0x20
-    char _pad24[0x0C];       // 0x24-0x2F
-    VECTOR4 cachePos[0x14];   // 0x30, size 0x140 
-    float cacheS[0x14];      // 0x170, size 0x50
-    int icvCache;            // 0x1C0
+struct CRVC : CRV
+{
+    VECTOR* pmappos;           
+    VECTOR* pmapos;            
+    char chPad24[0x0C];        
+    VECTOR4 vecCachePos[0x14]; 
+    float dCacheS[0x14];      
+    int icvCache;            
 };
 
 /**
@@ -64,60 +71,149 @@ struct CRVMC : CRV
 {
     CRVK crvk;
     int ccv;
-    float *mpicvu;
-    float *mpicvs;
-    VECTOR *mpicvpos;
+    float *picvu;
+    float *picvs;
+    VECTOR *picvpos;
 };
 
 /**
  * @brief Curve Measure Segment.
  */
 struct CRVMS {
-    CRV* crv;       // Offset 0x00
-    VECTOR* vec1;   // Offset 0x04
-    VECTOR* vec2;   // Offset 0x08
+    CRV* pcrv;     
+    VECTOR* pvec1;  
+    VECTOR* pvec2;   
 };
 // ...
 
-float GWrapApos(float g, int cpos, float *apos, int fClosed);
+float SMeasureApos(int ccv, VECTOR* pvec, float* pS);
+ 
+float GWrapApos(float dG, int cpos, float* pApos, int fClosed);
+ 
+int IposFindAposG(
+    float dG,
+    int cpos,
+    float* apos,
+    int fClosed,
+    float* out1,
+    float* out2);
+ 
+void EvaluateAposG(
+    float dG,
+    int cpos,
+    VECTOR* apos,
+    float* ag,
+    int fClosed,
+    VECTOR* out1,
+    VECTOR* out2);
+ 
+void EvaluateCrvcFromS(CRVC* crvc, float dS, VECTOR* pOut1, VECTOR* pOut2);
 
-int IposFindAposG(float g, int cpos, float* apos, int fClosed, float* out1, float* out2);
+void FindAposClosestPointAll(
+    VECTOR* pvec,
+    CONSTR* pconstr,
+    int ccv,
+    VECTOR* pmpicvpos,
+    VECTOR* pvec2,
+    VECTOR* pvec3,
+    int* piOut,
+    float* pdOut);
 
-void EvaluateAposG(float g, int cpos, VECTOR *apos, float *ag, int fClosed, VECTOR *out1, VECTOR *out2);
+int FindAposClosestPointSegment(
+    VECTOR* pvec,
+    CONSTR* pconstr,
+    int cpos,
+    VECTOR* apos,
+    int iPos,
+    int fClosed,
+    VECTOR* pvec2,
+    VECTOR* pvec3,
+    int* piPosOut,
+    float* pdSOut);
+ 
+void ConvertApos(int ccv, VECTOR* pMpicvpos, MATRIX4* pM1, MATRIX4* pM2);
+ 
+CRV* PcrvNew(CRVK crvk);
 
-void EvaluateCrvcFromS(CRVC* crvc, float s, VECTOR* out1, VECTOR* out2);
+void EvaluateCrvcFromS(CRVC* pcrvc, float dS, VECTOR* pvecOut1, VECTOR* pvecOut2);
+ 
+float SFromCrvU(CRV* pcrv, float dU);
+ 
+float UFromCrvS(CRV* pcrv, float dS);
+ 
+int IcvFindCrvU(CRV* pcrv, float dU, float* pg0, float* pg1);
+ 
+int IcvFindCrvS(CRV* pcrv, float dS, float* pg0, float* pg1);
 
-void ConvertCrvl(CRVL* crvl, MATRIX4* m1, MATRIX4* m2);
+float GMeasureCrvU(CRVMC* pcrvmc, float dU);
+ 
+float UMaxCrv(CRV* pcrv);
+ 
+float SMaxCrv(CRV* pcrv);
+ 
+float SMeasureCrvSegmentU(CRVMS* pcrvms, float dU);
+ 
+float DuGetCrvSearchIncrement(CRV* pcrv);
+ 
+void EvaluateCrvlFromU(CRVL* crvl, float dU, VECTOR* out1, VECTOR* out2);
+ 
+void EvaluateCrvlFromS(CRVL* crvl, float dS, VECTOR* out1, VECTOR* out2);
+ 
+void RenderCrvlSegment(
+    CRVL* pcrvl,
+    int icv,
+    MATRIX4* pmat,
+    CM* pcm,
+    RGBA rgba,
+    int unk);
+ 
+void ConvertCrvl(CRVL* crvl, MATRIX4* pM1, MATRIX4* pM2);
+ 
+float SFromCrvlU(CRVL* crvl, float dU);
+ 
+float UFromCrvlS(CRVL* crvl, float dS);
+ 
+float MeasureCrvl(CRVL* pcrvl);
+ 
+void FindCrvlClosestPointAll(
+    CRVL* pcrvl,
+    VECTOR* pvec,
+    CONSTR* pconstr,
+    VECTOR* pvec2,
+    VECTOR* pvec3,
+    float* pdUOut,
+    float* pdSOut);
+ 
+void FindCrvlClosestPointFromU(
+    CRVL* pcrvl,
+    VECTOR* pvec,
+    float dU,
+    CONSTR* pconstr,
+    VECTOR* pvec2,
+    VECTOR* pvec3,
+    float* pdUOut,
+    float* pdSOut);
+ 
+void InvalidateCrvcCache(CRVC* crvc);
+ 
+void FillCrvcCache(CRVC* pcrvc, int icv);
+ 
+float SFromCrvcU(CRVC* pcrvc, float dU);
+ 
+float UFromCrvcS(CRVC* pcrvc, float dS);
 
-void ConvertApos(int ccv, VECTOR* mpicvpos, MATRIX4* m1, MATRIX4* m2);
+void MeasureCrvc(CRVC* pcrvc);
+ 
+void FindCrvcClosestPointFromS(
+    CRVC* pcrvc,
+    VECTOR* pvec,
+    float dS,
+    CONSTR* pconstr,
+    VECTOR* pvec2,
+    VECTOR* pvec3,
+    float* pdUOut,
+    float* pdSOut);
 
-CRV *PcrvNew(CRVK crvk);
-
-float SFromCrvU(CRV *crv, float u);
-
-float UFromCrvS(CRV *crv, float s);
-
-int IcvFindCrvU(CRV *crv, float u, float *pg0, float *pg1);
-
-int IcvFindCrvS(CRV *crv, float s, float *pg0, float *pg1);
-
-float UMaxCrv(CRV *crv);
-
-float SMaxCrv(CRV *crv);
-
-float SMeasureCrvSegmentU(CRVMS* crvms, float u);
-
-void EvaluateCrvlFromU(CRVL *crvl, float u, VECTOR *out1, VECTOR *out2);
-
-void EvaluateCrvlFromS(CRVL *crvl, float s, VECTOR *out1, VECTOR *out2);
-
-void ConvertCrvl(CRVL* crvl, MATRIX4* m1, MATRIX4* m2);
-
-float SFromCrvlU(CRVL* crvl, float u);
-
-float UFromCrvlS(CRVL *crvl, float s);
-
-void InvalidateCrvcCache(CRVC *crvc);
 
 
 

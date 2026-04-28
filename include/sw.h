@@ -171,7 +171,7 @@ void LoadSwFromBrx(SW *psw, CBinaryInputStream *pbis);
 
 int FClipLineHomogeneous(VECTOR4 *apos);
 
-void DrawLineWorld(VECTOR *ppos1, VECTOR *ppos2, RGBA *rgba, CM *pcm, int fDepthTest);
+void DrawLineWorld(VECTOR *ppos1, VECTOR *ppos2, RGBA rgba, CM *pcm, int fDepthTest);
 
 void DrawAxesWorld(VECTOR *ppos, MATRIX3 *pmat, float sScale, CM *pcm, int fDepthTest);
 

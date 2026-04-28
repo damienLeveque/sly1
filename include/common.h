@@ -77,6 +77,8 @@ struct RGBA
     uchar bBlue;
     uchar bAlpha;
 
+    RGBA() {} // Needed to avoid errors about non-POD type when using RGBA in arrays and structs.
+
     inline void operator=(const int rgba)
     {
         bRed = (rgba >> 24) & 0xFF;

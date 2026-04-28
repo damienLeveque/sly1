@@ -223,6 +223,18 @@ float GLimitLm(LM *plm, float g);
  */
 void Force(void *pv);
 
+extern "C" void MinimizeRange(
+    float (*pfn)(void* pcontext, float dValue),
+    void* pcontext,
+    float dInitial,
+    float dIncrement,
+    float dMin,
+    float dMax,
+    float* pdOut1,
+    float* pdOut2
+);
+
+
 // todo: see if these exist and/or in the right oder
 //int CSolveClq(CLQ* pclq, float g, float* ag);
 //float DtSmooth(float gCur, float gTarget, SMP* psmp, float* pdg);

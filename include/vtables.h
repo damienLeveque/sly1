@@ -271,14 +271,29 @@ struct VTSAA
 
 struct CRV;
 struct VECTOR;
+struct CONSTR;
 struct VTCRV {
-    void* unk00;                                     // Offset 0x00
-    void (*func04)(CRV*, float, VECTOR*, VECTOR*);  // Offset 0x04
+    void* unk00;                                   
+    void (*func04)(CRV*, float, VECTOR*, VECTOR*);  
     void* unk08;
     void* unk0C;
     void* unk10;
-    void* unk14;
-    float (*func18)(CRV*, float, VECTOR*, VECTOR*); // Offset 0x18
+    float (*func14)(CRV*, float);
+    float (*UFromS)(CRV* pcrv, float dS);
+    void* func1C;
+    void* func20;
+    void (*func24)(CRV* pcrv);
+    void* func28;
+
+    void (*FindClosestPointFromU)(
+        CRV* pcrv, 
+        VECTOR* pvec, 
+        float dU, 
+        CONSTR* pconstr, 
+        VECTOR* pvec2, 
+        VECTOR* pvec3, 
+        float* pdUOut, 
+        float* pdSOut);
 };
 
 /**
