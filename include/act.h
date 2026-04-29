@@ -8,12 +8,16 @@
 #include <vec.h>
 #include <mat.h>
 #include <dl.h>
+#include <types.h>
 
 // Forward.
 struct SW;
 struct ALO;
 
 typedef int GRFRA;
+
+extern VTACT D_00219560;
+extern MATRIX3_ALIGNED D_002483D0;
 
 /**
  * @brief Action.
@@ -24,7 +28,10 @@ struct ACT
     /* 0x00 */ VTACT *pvtact;
     /* 0x04 */ ALO *palo;
     /* 0x08 */ DLE dleAlo;
-    /* 0x10 */ STRUCT_PADDING(1);
+    /* 0x10 */ char ackPos;     
+    /* 0x11 */ char ackRot;     
+    /* 0x12 */ char bUnk12;     
+    /* 0x13 */ char bUnk13;     
     /* 0x14 */ int nPriority;
     /* 0x18 */ float tMatch;
 };

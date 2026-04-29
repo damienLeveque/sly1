@@ -47,7 +47,8 @@ struct SW : public LO
     /* 0x1afc */ STRUCT_PADDING(3); // Likely a SLOTHEAP.
     /* 0x1b08 */ SLOTHEAP slotheapXa;
     /* 0x1b14 */ SLOTHEAP slotheapMq;
-    /* 0x1b20 */ STRUCT_PADDING(14);
+    /* 0x1b20 */ SLOTHEAP slotheapAct;
+    /* 0x1b20 */ STRUCT_PADDING(11);
     /* 0x1b58 */ SLOTHEAP slotheapAsega;
     /* 0x1b64 */ STRUCT_PADDING(6);
     /* 0x1b7c */ DL dlAsegaPending;

@@ -36,6 +36,10 @@ typedef ulong   undefined8;
 // 128-bit quad-word type for lq/sq instructions
 typedef unsigned long long qword __attribute__((mode(TI)));
 
+struct MATRIX3_ALIGNED {
+    qword row[3];
+};
+
 // Misc
 typedef uchar byte;
 typedef union QW;

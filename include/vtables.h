@@ -30,6 +30,7 @@ struct VT
 struct CBinaryInputStream;
 struct LO;
 
+
 /**
  * @brief VT for basic objects.
  */
@@ -77,6 +78,22 @@ struct VTLO : VT
     void (*pfnUnsubscribeLoStruct)();
     void (*pfnGetLoParams)();
     void (*pfnUpdateLoLiveEdit)();
+};
+
+/**
+ * @brief VT for ALO objects.
+ */
+
+struct ALO;
+struct VECTOR;
+struct MATRIX3;
+struct VTALO : VTLO
+{
+    /* 0x84 */ void (*pfnSetPosition)(ALO* palo, VECTOR* pvecPos);
+    /* 0x88 */ void (*pfnSetRotation)(ALO* palo, MATRIX3* pmatRot);
+    /* 0x8C */ void* unk8C; // Probably a function pointer, but unknown prototype.
+    /* 0x90 */ void (*pfnSetVelocity)(ALO* palo, VECTOR* pvecVel);
+    /* 0x94 */ void (*pfnSetAngularVelocity)(ALO* palo, VECTOR* pvecAngVel);
 };
 
 /*****************************************************************
@@ -299,9 +316,15 @@ struct VTCRV {
 /**
  * @brief VT for an act related struct.
  */
+ struct ACT;
 struct VTACT
 {
-    // ...
+    void (*pfnInit)(ACT* pact, ALO* palo);                       
+    void (*pfnClone)(ACT* pactNew, ACT* pactSrc);                 
+    void (*pfnRetract)(ACT* pact, int);                           
+    void* unk0C;                                                  
+    void (*pfnGetPositionGoal)(ACT*, float, VECTOR*, VECTOR*);  
+    void (*pfnGetRotationGoal)(ACT*, float, MATRIX3*, VECTOR*);  
 };
 
 #endif // VTABLES_H

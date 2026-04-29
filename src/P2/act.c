@@ -1,12 +1,46 @@
 #include <act.h>
+#include <sw.h>
+#include <slotheap.h>
+#include <memory.h>
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", PactNew__FP2SWP3ALOP5VTACT);
+ACT* PactNew(SW* psw, ALO* palo, VTACT* pvtact)
+{
+    ACT* pact = (ACT*)PvAllocSlotheapClearImpl(&psw->slotheapAct); 
+    pact->pvtact = pvtact;
+    pact->pvtact->pfnInit(pact, palo);
+    return pact;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", PactNewClone__FP3ACTP2SWP3ALO);
+ACT* PactNewClone(ACT* pactSrc, SW* psw, ALO* palo)
+{
+    ACT* pactNew = PactNew(psw, palo, &D_00219560);
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", CloneAct__FP3ACTT0);
+    pactNew->pvtact->pfnClone(pactNew, pactSrc);
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", InitAct__FP3ACTP3ALO);
+    return pactNew;
+}
+
+void CloneAct(ACT* pactNew, ACT* pactSrc)
+{
+    DLE dlSaved = pactNew->dleAlo;
+    
+    ALO* paloSaved = pactNew->palo;
+
+    CopyAb(pactNew, pactSrc, g_psw->slotheapAct.cb);
+
+    pactNew->dleAlo = dlSaved;
+    pactNew->palo = paloSaved;
+}
+
+void InitAct(ACT* pact, ALO* palo)
+{
+    char c = -1;
+    pact->bUnk12 = c;       
+    pact->palo = palo;
+    pact->bUnk13 = -1;       
+    pact->ackRot = c;        
+    pact->ackPos = c;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", RetractAct__FP3ACTi);
 
@@ -16,7 +50,12 @@ INCLUDE_ASM("asm/nonmatchings/P2/act", GetActRotationGoal__FP3ACTfP7MATRIX3P6VEC
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", GetActTwistGoal__FP3ACTPfT1);
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", GetActScale__FP3ACTP7MATRIX3);
+void GetActScale(ACT* pact, MATRIX3* pmat)
+{
+    ((MATRIX3_ALIGNED*)pmat)->row[0] = ((MATRIX3_ALIGNED*)&D_002483D0)->row[0];
+    ((MATRIX3_ALIGNED*)pmat)->row[1] = ((MATRIX3_ALIGNED*)&D_002483D0)->row[1];
+    ((MATRIX3_ALIGNED*)pmat)->row[2] = ((MATRIX3_ALIGNED*)&D_002483D0)->row[2];
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", GGetActPoseGoal__FP3ACTi);
 
@@ -38,7 +77,12 @@ INCLUDE_ASM("asm/nonmatchings/P2/act", PredictAloPosition__FP3ALOfP6VECTORT2);
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", PredictAloRotation__FP3ALOfP7MATRIX3P6VECTOR);
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", AdaptAct__FP3ACT);
+void AdaptAct(ACT* pact)
+{
+    char* p = (char*)pact;
+    if (p[0x10] == 7) p[0x10] = 3;
+    if (p[0x11] == 7) p[0x11] = 3;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", InitActval__FP6ACTVALP3ALO);
 
