@@ -9,6 +9,7 @@
 #include <mat.h>
 #include <dl.h>
 #include <types.h>
+#include <sm.h>
 
 // Forward.
 struct SW;
@@ -19,6 +20,7 @@ typedef int GRFRA;
 extern VTACT D_00219560;
 extern VECTOR D_00248D30;
 extern MATRIX3_ALIGNED D_002483D0;
+extern SMP D_00260E60;
 
 /**
  * @brief Action.
@@ -32,7 +34,7 @@ struct ACT
     /* 0x10 */ char ackPos;     
     /* 0x11 */ char ackRot;     
     /* 0x12 */ char bUnk12;     
-    /* 0x13 */ char bUnk13;     
+    /* 0x13 */ char bPoseMode;     
     /* 0x14 */ int nPriority;
     /* 0x18 */ float tMatch;
 };
@@ -44,13 +46,15 @@ struct ACT
 struct ACTVAL : public ACT
 {
     /* 0x1C */ int pad_1c;                  
-    /* 0x20 */ VECTOR posGoal;              
+    /* 0x20 */ VECTOR posGoal;    
+    /* 0x2C */ float pad_posGoal_w;          
     /* 0x30 */ VECTOR velGoal;            
     /* 0x40 */ MATRIX3_ALIGNED matOrig;     
-    /* 0x70 */ int pad_70[4];               
+    /* 0x70 */ VECTOR rotVelGoal;     
+    /* 0x7c */ STRUCT_PADDING(1);         
     /* 0x80 */ float radTwistGoal;          
     /* 0x84 */ float dradTwistGoal;
-    /* 0x88 */ int pad_88[2];              
+    /* 0x88 */ STRUCT_PADDING(2);              
     /* 0x90 */ MATRIX3_ALIGNED matGoal;    
     /* 0xC0 */ float sRadius;               
     /* 0xC4 */ union {
@@ -86,9 +90,9 @@ struct ACTREF : public ACT
  */
 struct ACTADJ : public ACT
 {
-    /* 0x1C */ int pad_1c[9];           // 36 bytes padding to reach 0x40
+    /* 0x1C */ STRUCT_PADDING(9);       // 36 bytes padding to reach 0x40
     /* 0x40 */ MATRIX3_ALIGNED mat1;    // The matrix at 0x40
-    /* 0x70 */ int pad_70[8];           // 32 bytes padding to reach 0x90
+    /* 0x70 */ STRUCT_PADDING(8);       // 32 bytes padding to reach 0x90
     /* 0x90 */ MATRIX3_ALIGNED mat2;    // The matrix at 0x90
     // ...
 };

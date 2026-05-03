@@ -215,15 +215,15 @@ struct ALO : public LO
     /* 0x228 */ int cframeStatic;
     /* 0x22C */ int padding_3[16]; 
     /* 0x26C */ float sRadius;     
-    /* 0x270 */ int pad_270;
+    /* 0x270 */ float* pagPose;
     /* 0x274 */ int grfalo;   
     /* 0x278 */ int pad_278[2];    
     /* 0x280 */ SHADOW *pshadow;
     /* 0x284 */ THROB *pthrob;
     /* 0x288 */ float sFastShadowRadius;
     /* 0x28C */ float sFastShadowDepth;
-    /* 0x290 */ int fRealClock;
-    /* 0x294 */ FADER *pfader;
+    /* 0x290 */ FADER *pfader;
+    /* 0x294 */ int fRealClock;
     /* 0x298 */ float dtUpdatePause;
     /* 0x29C */ ASEGD *pasegd;
     /* 0x2A0 */ float sRadiusRenderSelf;

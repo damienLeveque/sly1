@@ -331,6 +331,8 @@ struct VTACT
     /* 0x10 */ void (*pfnGetPositionGoal)(ACT*, float, VECTOR*, VECTOR*);  
     /* 0x14 */ void (*pfnGetRotationGoal)(ACT*, float, MATRIX3*, VECTOR*);  
     /* 0x18 */ void (*pfnGetTwistGoal)(ACT*, float*, float*);
+    /* 0x1C */ void* pad_1C;
+    /* 0x20 */ float (*pfnGetPoseTarget)(ACT* pact, int iPose);
 };
 
 #endif // VTABLES_H

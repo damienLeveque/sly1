@@ -4,6 +4,7 @@
 #include <slotheap.h>
 #include <types.h>
 #include <memory.h>
+#include <clock.h>
 
 ACT* PactNew(SW* psw, ALO* palo, VTACT* pvtact)
 {
@@ -39,7 +40,7 @@ void InitAct(ACT* pact, ALO* palo)
     char c = -1;
     pact->bUnk12 = c;       
     pact->palo = palo;
-    pact->bUnk13 = -1;       
+    pact->bPoseMode = -1;       
     pact->ackRot = c;        
     pact->ackPos = c;
 }
@@ -232,7 +233,28 @@ INCLUDE_ASM("asm/nonmatchings/P2/act", CalculateAloRotationSpring__FP3ALOfP7MATR
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", ProjectActRotation__FP3ACT);
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", ProjectActPose__FP3ACTi);
+// INCLUDE_ASM("asm/nonmatchings/P2/act", ProjectActPose__FP3ACTi);
+
+void ProjectActPose(ACT* pact, int iPose)
+{
+    float fTarget = pact->pvtact->pfnGetPoseTarget(pact, iPose);
+
+    switch (pact->bPoseMode)
+    {
+        case 2:
+            pact->palo->pagPose[iPose] = fTarget;
+            break;
+            
+        case 3:
+        {
+            float val = pact->palo->pagPose[iPose];
+            float dt = pact->palo->fRealClock ? g_clock.dtReal : g_clock.dt;
+            
+            pact->palo->pagPose[iPose] = GSmooth(val, fTarget, dt, &D_00260E60, 0);
+            break;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", PredictAloPosition__FP3ALOfP6VECTORT2);
 
@@ -267,9 +289,34 @@ void InitActval(ACTVAL* pactval, ALO* palo)
     pactval->grfalo = palo->grfalo; 
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", GetActvalPositionGoal__FP6ACTVALfP6VECTORT2);
+void GetActvalPositionGoal(ACTVAL* pactval, float dt, VECTOR* pvecPos, VECTOR* pvecVel)
+{
+    // The use of volatile is required to match, as the compiler must not optimize the loads into registers, as they are used in a function call below that may modify them.
+    *(volatile qword*)pvecPos = *(volatile qword*)&pactval->posGoal; 
+    *(volatile qword*)pvecVel = *(volatile qword*)&pactval->velGoal;
 
-INCLUDE_ASM("asm/nonmatchings/P2/act", GetActvalRotationGoal__FP6ACTVALfP7MATRIX3P6VECTOR);
+    if (pactval->palo->pvtalo->pfnUpdatePositionGoal != 0)
+    {
+        pactval->palo->pvtalo->pfnUpdatePositionGoal(pactval->palo, pvecPos);
+    }
+}
+
+
+void GetActvalRotationGoal(ACTVAL* pactval, float dt, MATRIX3* pmat, VECTOR* pvec)
+{
+    qword* pDstMat = (qword*)pmat;
+    qword* pDstVec = (qword*)pvec;
+
+    qword* pSrc = (qword*)pactval; 
+
+    pDstMat[0] = pSrc[4]; 
+    pDstMat[1] = pSrc[5]; 
+    pDstMat[2] = pSrc[6]; 
+
+    pDstVec[0] = pSrc[7]; 
+
+    pactval->palo->pvtalo->pfnUpdateRotationGoal(pactval->palo, pmat, pvec);
+}
 
 void GetActvalTwistGoal(ACTVAL *pactval, float *pradTwist, float *pdradTwist)
 {
