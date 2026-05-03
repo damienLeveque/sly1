@@ -17,6 +17,7 @@ struct ALO;
 typedef int GRFRA;
 
 extern VTACT D_00219560;
+extern VECTOR D_00248D30;
 extern MATRIX3_ALIGNED D_002483D0;
 
 /**
@@ -42,12 +43,21 @@ struct ACT
  */
 struct ACTVAL : public ACT
 {
-    /* 0x1c */ STRUCT_PADDING(25);
-    /* 0x80 */ float radTwistGoal;
+    /* 0x1C */ int pad_1c;                  
+    /* 0x20 */ VECTOR posGoal;              
+    /* 0x30 */ VECTOR velGoal;            
+    /* 0x40 */ MATRIX3_ALIGNED matOrig;     
+    /* 0x70 */ int pad_70[4];               
+    /* 0x80 */ float radTwistGoal;          
     /* 0x84 */ float dradTwistGoal;
-    /* 0x88 */ STRUCT_PADDING(15);
-    /* 0xc4 */ float *agPoses;
-    // ...
+    /* 0x88 */ int pad_88[2];              
+    /* 0x90 */ MATRIX3_ALIGNED matGoal;    
+    /* 0xC0 */ float sRadius;               
+    /* 0xC4 */ union {
+        int grfalo;
+        float* agPoses;
+    };                
+
 };
 
 /**
@@ -56,10 +66,18 @@ struct ACTVAL : public ACT
  */
 struct ACTREF : public ACT
 {
-    /* 0x1c */ STRUCT_PADDING(4);
-    /* 0x2c */ float *pradTwistGoal;
+    /* 0x1C */ VECTOR* pvecPosGoal;
+    /* 0x20 */ VECTOR* pvecVelGoal; 
+    /* 0x24 */ MATRIX3* pmatGoal;
+    /* 0x28 */ VECTOR* pvecVelGoalAng; 
+    /* 0x2C */ float *pradTwistGoal;
     /* 0x30 */ float *pdradTwistGoal;
-    // ...
+    /* 0x34 */ MATRIX3_ALIGNED *pmatIdentityGoal;
+    /* 0x38 */ float *psRadiusGoal;
+    /* 0x3C */ union {
+        int grfGoal;
+        float* agPoses;
+    };
 };
 
 /**
@@ -68,6 +86,10 @@ struct ACTREF : public ACT
  */
 struct ACTADJ : public ACT
 {
+    /* 0x1C */ int pad_1c[9];           // 36 bytes padding to reach 0x40
+    /* 0x40 */ MATRIX3_ALIGNED mat1;    // The matrix at 0x40
+    /* 0x70 */ int pad_70[8];           // 32 bytes padding to reach 0x90
+    /* 0x90 */ MATRIX3_ALIGNED mat2;    // The matrix at 0x90
     // ...
 };
 

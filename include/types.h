@@ -36,6 +36,7 @@ typedef ulong   undefined8;
 // 128-bit quad-word type for lq/sq instructions
 typedef unsigned long long qword __attribute__((mode(TI)));
 
+// 128-bit aligned 128-bit type, used for matrices and vectors to be loaded with lq/sq instructions
 struct MATRIX3_ALIGNED {
     qword row[3];
 };

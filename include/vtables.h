@@ -94,6 +94,11 @@ struct VTALO : VTLO
     /* 0x8C */ void* unk8C; // Probably a function pointer, but unknown prototype.
     /* 0x90 */ void (*pfnSetVelocity)(ALO* palo, VECTOR* pvecVel);
     /* 0x94 */ void (*pfnSetAngularVelocity)(ALO* palo, VECTOR* pvecAngVel);
+    /* 0x98 */ int padding_vtalo[6]; 
+    /* 0xB0 */ void (*pfnUpdatePositionGoal)(ALO* palo, VECTOR* pvecPos);
+    /* 0xB4 */ void (*pfnUpdateRotationGoal)(ALO* palo, MATRIX3* pmatRot, VECTOR* pvecVel);
+    /* 0xB8 */ int padding_vtalo2[1];
+    /* 0xBC */ void (*pfnOnActRetract)(ALO* palo);
 };
 
 /*****************************************************************
@@ -319,12 +324,13 @@ struct VTCRV {
  struct ACT;
 struct VTACT
 {
-    void (*pfnInit)(ACT* pact, ALO* palo);                       
-    void (*pfnClone)(ACT* pactNew, ACT* pactSrc);                 
-    void (*pfnRetract)(ACT* pact, int);                           
-    void* unk0C;                                                  
-    void (*pfnGetPositionGoal)(ACT*, float, VECTOR*, VECTOR*);  
-    void (*pfnGetRotationGoal)(ACT*, float, MATRIX3*, VECTOR*);  
+    /* 0x00 */ void (*pfnInit)(ACT* pact, ALO* palo);                       
+    /* 0x04 */ void (*pfnClone)(ACT* pactNew, ACT* pactSrc);                 
+    /* 0x08 */ void (*pfnRetract)(ACT* pact, int);                           
+    /* 0x0C */ void* unk0C;                                                  
+    /* 0x10 */ void (*pfnGetPositionGoal)(ACT*, float, VECTOR*, VECTOR*);  
+    /* 0x14 */ void (*pfnGetRotationGoal)(ACT*, float, MATRIX3*, VECTOR*);  
+    /* 0x18 */ void (*pfnGetTwistGoal)(ACT*, float*, float*);
 };
 
 #endif // VTABLES_H

@@ -26,7 +26,6 @@ struct WKR;
 struct ZPR;
 struct WATER;
 struct CNSTR;
-struct CONSTR;
 
 typedef int GRFFSO;
 
@@ -64,15 +63,26 @@ enum FSO
 };
 
 /**
+ * @class CONSTR
+ * @brief Unknown, related to SO constraints.
+ *
+ * @todo Implement the struct. Does this belong here?
+ */
+struct CONSTR {
+    int reserved[8];
+};
+
+/**
  * @class OBJECT
  * @brief Unknown, related to level objects.
  *
  * @todo Implement struct.
  */
 struct SO : public ALO
-{
-    // ...
-    //* 0x368 */ float mass;
+{    
+    char unk_so_physics[0x170];
+    /* 0x440 */ CONSTR constrPos;
+    /* 0x460 */ CONSTR constrRot;
 };
 
 /**

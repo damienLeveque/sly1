@@ -150,6 +150,19 @@ struct XF
 };
 
 /**
+ * @brief Unknown.
+ *
+ * @todo Finish implementing struct.
+ */
+struct ALOX 
+{
+    /* 0x00 */ int pad_alox[35]; // Pad up to 0x8C
+    /* 0x8C */ float radTwist;
+    /* 0x90 */ int pad_alox2[8]; // Pad up to 0xB0
+    /* 0xB0 */ int grfalox;
+};
+
+/**
  * @class LIGHTWEIGHT
  * @brief Unknown, probably used for instancing LOs.
  *
@@ -157,66 +170,78 @@ struct XF
  */
 struct ALO : public LO
 {
-    DL dlChild; // 0x34
-    DLE dleBusy; // 0x40
-    DLE dleMRD; // 0x48
-    ALO *paloRoot; // 0x50
-    ALO *paloFreezeRoot; // 0x54
-    DLE dleFreeze; // 0x58
-    DL dlFreeze; // 0x60
-    int cpmrg; // 0x6c
-    MRG *apmrg; // 0x70,
-    float sMRD; // 0x74
-    float sCelBorderMRD; // 0x78
-    int grfzon; // 0x7c
-    float dsMRDSnap; // 0x80
-    undefined4 unk_0x9c;
-    STRUCT_PADDING(10); // int frz[10];
-    XF xf; 
-    VECTOR posOrig; 
-    MATRIX3 matOrig; 
-    VECTOR eulOrig; 
-    DL dlAct;  
-    ACT *pactPos; 
-    ACT *pactRot; 
-    ACT *pactScale; 
-    ACT **apactPost; 
-    ACT *pactRestore; 
-    ACTLY *pactla; 
-    ACTBANK *pactbank; 
-    IKH *pikh; 
-    CLQ *pclqPosSpring; 
-    CLQ *pclwPosDamping; 
-    CLQ *pclqRotSpring; 
-    CLQ *pclqRotDamping;
-    SMPA *psmpaPos; 
-    SMPA *psmapaRot; 
-    ALOX *palox;
-    int cframeStatic;
-    STRUCT_PADDING(22); // GLOBSET globset;
-    SHADOW *pshadow;
-    THROB *pthrob;
-    float sFastShadowRadius;
-    float sFastShadowDepth;
-    int fRealClock;
-    FADER *pfader;
-    float dtUpdatePause;
-    ASEGD *pasegd;
-    float sRadiusRenderSelf;
-    float sRadiusRenderAll;
-    SFX *psfx;
-    STRUCT_PADDING(25);
-    FICG ficg;
-    STRUCT_PADDING(1); // ???
-    int cposed;
-    POSEC *aposec;
-    ACTREF *pactrefCombo;
-    /* 0x2c4 */ DLR *pdlrFirst;
-    // ???
-    ACK ackRot;
-    // ???
+    /* 0x034 */ DL dlChild; 
+    /* 0x040 */ DLE dleBusy; 
+    /* 0x048 */ DLE dleMRD; 
+    /* 0x050 */ ALO *paloRoot; 
+    /* 0x054 */ ALO *paloFreezeRoot;
+    /* 0x058 */ DLE dleFreeze; 
+    /* 0x060 */ DL dlFreeze; 
+    /* 0x06C */ int cpmrg; 
+    /* 0x070 */ MRG *apmrg; 
+    /* 0x074 */ float sMRD; 
+    /* 0x078 */ float sCelBorderMRD; 
+    /* 0x07C */ int grfzon; 
+    /* 0x080 */ float dsMRDSnap; 
+    /* 0x084 */ undefined4 unk_0x9c;
+    /* 0x088 */ int padding[10]; 
+    /* 0x0B0 */ XF xf; 
+    /* 0x140 */ int pad_xf[4];
+    /* 0x150 */ VECTOR posOrig; 
+    /* 0x15C */ int pad_pos;     
+    /* 0x160 */ VECTOR eulOrig;
+    /* 0x16C */ int pad_eul;     
+    /* 0x170 */ char pad_mystere[32]; 
+    /* 0x190 */ VECTOR posGoal;  
+    /* 0x19C */ int pad_posGoal; 
+    /* 0x1A0 */ MATRIX3 matOrig; 
+    /* 0x1C4 */ char pad_vers_dlact[28]; 
+    /* 0x1E0 */ DL dlAct; 
+    /* 0x1EC */ ACT *pactPos; 
+    /* 0x1F0 */ ACT *pactRot;
+    /* 0x1F4 */ ACT *pactScale; 
+    /* 0x1F8 */ ACT **apactPost; 
+    /* 0x1FC */ ACT *pactRestore; 
+    /* 0x200 */ ACTLY *pactla; 
+    /* 0x204 */ ACTBANK *pactbank; 
+    /* 0x208 */ IKH *pikh; 
+    /* 0x20C */ CLQ *pclqPosSpring; 
+    /* 0x210 */ CLQ *pclwPosDamping; 
+    /* 0x214 */ CLQ *pclqRotSpring; 
+    /* 0x218 */ CLQ *pclqRotDamping;
+    /* 0x21C */ SMPA *psmpaPos; 
+    /* 0x220 */ SMPA *psmapaRot; 
+    /* 0x224 */ ALOX *palox;
+    /* 0x228 */ int cframeStatic;
+    /* 0x22C */ int padding_3[16]; 
+    /* 0x26C */ float sRadius;     
+    /* 0x270 */ int pad_270;
+    /* 0x274 */ int grfalo;   
+    /* 0x278 */ int pad_278[2];    
+    /* 0x280 */ SHADOW *pshadow;
+    /* 0x284 */ THROB *pthrob;
+    /* 0x288 */ float sFastShadowRadius;
+    /* 0x28C */ float sFastShadowDepth;
+    /* 0x290 */ int fRealClock;
+    /* 0x294 */ FADER *pfader;
+    /* 0x298 */ float dtUpdatePause;
+    /* 0x29C */ ASEGD *pasegd;
+    /* 0x2A0 */ float sRadiusRenderSelf;
+    /* 0x2A4 */ float sRadiusRenderAll;
+    /* 0x2A8 */ SFX *psfx;
+    /* 0x2AC */ int pad_2ac;
+    /* 0x2AC */ FICG ficg;
+    /* 0x2B8 */ int cposed;
+    /* 0x2BC */ POSEC *aposec;
+    /* 0x2C0 */ ACTREF *pactrefCombo;
+    /* 0x2C4 */ DLR *pdlrFirst;
+    /* 0x2C8 */ int pad_2c8;    
+    /* 0x2CC */ ACK ackRot;
+    
     // ...
 };
+
+
 
 int FIsZeroV(VECTOR *pv);
 
