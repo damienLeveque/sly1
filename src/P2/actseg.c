@@ -1,4 +1,5 @@
 #include <actseg.h>
+#include <aseg.h>
 #include <asega.h>
 
 void RetractActseg(ACTSEG *pactseg, GRFRA grfra)
@@ -33,4 +34,18 @@ INCLUDE_ASM("asm/nonmatchings/P2/actseg", GetActsegTwistGoal__FP6ACTSEGPfT1);
 
 INCLUDE_ASM("asm/nonmatchings/P2/actseg", GetActsegScale__FP6ACTSEGP7MATRIX3);
 
-INCLUDE_ASM("asm/nonmatchings/P2/actseg", GGetActsegPoseGoal__FP6ACTSEGi);
+float GGetActsegPoseGoal(ACTSEG* pactseg, int iPose)
+{
+    float result;
+    
+    ASEGA* pasega = pactseg->pasega;
+    
+    ASEG_FRAME* pasegframe = &pasega->paseg->aasegframe[pactseg->iAsegd];
+    
+    ACT* pactTarget = pasegframe->apactPoses[iPose];
+
+    typedef void (*PfnEval)(ACT*, ALO*, void*, float*, int, float, float);
+    ((PfnEval)pactTarget->pvtact->pfnInit)(pactTarget, pactseg->palo, 0, &result, 0, pasega->tStart, pasega->tEnd);
+
+    return result;
+}

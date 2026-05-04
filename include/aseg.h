@@ -47,19 +47,28 @@ struct CHN
     // ...
 };
 
+struct ASEG_FRAME
+{
+    /* 0x00 */ int pad_00[3];
+    /* 0x0C */ ACT *pactScale;    
+    /* 0x10 */ int pad_10[2];
+    /* 0x18 */ ACT **apactPoses;   
+}; // Total size: 0x1C (28 bytes)
 /**
  * @class ANIMATION_SEGMENT
  * @brief Object representing an animation segment.
  */
 struct ASEG : public LO
 {
-    /* 0x34 */ STRUCT_PADDING(14);
-    /* 0x6c */ DL dlAsega;
+    /* 0x34 */ int pad_34[2];         
+    /* 0x3C */ ASEG_FRAME *aasegframe; 
+    /* 0x40 */ int pad_40[11];        
+    /* 0x6C */ DL dlAsega;
     /* 0x78 */ STRUCT_PADDING(2);
     /* 0x80 */ CLQ clqMasterSuck;
     /* 0x90 */ LM lmMasterSuck;
     /* 0x98 */ float svtMasterSuck;
-    /* 0x9c */ CHN *pchnStrip;
+    /* 0x9C */ CHN *pchnStrip;
 };
 
 /**
