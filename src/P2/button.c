@@ -1,13 +1,55 @@
 #include <button.h>
 #include <chkpnt.h>
+#include <find.h>
+#include <alo.h>
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", PostAshLoad__FP2SWP3ASHP3ALO);
+void PostAshLoad(SW *psw, ASH *pash, ALO *palo)
+{
+    int coid = pash->coid;
+    OID *poid = pash->aoid;
+    for(int i = 0; i < coid; i++)
+    {
+        ASEG *paseg = (ASEG *)PloFindSwObject(psw, 0x104, poid[i], (LO *)palo);
+        if (!paseg) continue;
+        FAddAshAseg(pash, paseg);
+        SnipLo((LO *)paseg);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", FFoundAshAseg__FP3ASHP4ASEG);
+int FFoundAshAseg(ASH* pash, ASEG* paseg)
+{
+    OID* aoid = pash->aoid;
+    
+    for (int i = pash->coid - 1; i >= 0; i--)
+    {
+        if (FMatchesLoName((LO*)paseg, aoid[i]))
+        {
+            return 1;
+        }
+    }
+    
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", FAddAshAseg__FP3ASHP4ASEG);
+int FAddAshAseg(ASH* pash, ASEG* paseg)
+{
+    int cpaseg = pash->cpaseg;
+    pash->apaseg[cpaseg] = paseg;
+    cpaseg++;
+    
+    pash->cpaseg = cpaseg;
+    
+    return cpaseg < 16;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", FAddAshOid__FP3ASH3OID);
+int FAddAshOid(ASH* pash, OID oid)
+{
+    int coid = pash->coid;
+    pash->aoid[coid] = oid;
+    coid++;
+    pash->coid = coid;
+    return coid < 16;
+}
 
 void InitBtn(BTN *pbtn)
 {
@@ -21,9 +63,36 @@ INCLUDE_ASM("asm/nonmatchings/P2/button", PostBtnLoad__FP3BTN);
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", RestoreBtnFromCheckpointCallback__FP3BTN5MSGIDPv);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", SetBtnRsmg__FP3BTNi3OIDN22);
+void SetBtnRsmg(BTN* pbtn, int irsmg, OID oid1, OID oid2, OID oid3)
+{
+    FAddRsmg(pbtn->arsmg, 8, &pbtn->crsmg, irsmg, oid1, oid2, oid3);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", SetBtnButtons__FP3BTN7BUTTONS);
+void SetBtnButtons(BTN* pbtn, BUTTONS buttons)
+{
+    BUTTONS oldButtons = pbtn->buttons;
+    
+    if (buttons != oldButtons)
+    {
+        int fTrigger = (oldButtons == BUTTONS_NoContact) && (buttons == BUTTONS_Contact);
+        int fUntrigger = (oldButtons != BUTTONS_Nil) && (buttons == BUTTONS_NoContact);
+        
+        pbtn->buttons = buttons;
+        pbtn->tButtons = g_clock.t;
+        
+        ResolveAlo(pbtn->paloOwner);
+        
+        if (fTrigger)
+        {
+            TriggerBtn(pbtn, 0, 0);
+        }
+        
+        if (fUntrigger)
+        {
+            UntriggerBtn(pbtn, 0);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", FAddRsmg__FP4RSMGiPii3OIDN24);
 
@@ -68,13 +137,13 @@ void UntriggerBtn(BTN *pbtn, int fSeekToEnd)
 void InitButton(BUTTON *pbutton)
 {
     InitSo(pbutton);
-    InitBtn(&STRUCT_OFFSET(pbutton, 0x554, BTN)); // pbutton->btn
+    InitBtn(&pbutton->btn); 
 }
 
 void LoadButtonFromBrx(BUTTON *pbutton, CBinaryInputStream *pbis)
 {
     LoadSoFromBrx(pbutton, pbis);
-    LoadBtn(&STRUCT_OFFSET(pbutton, 0x554, BTN), pbutton); // pbutton->btn
+    LoadBtn(&pbutton->btn, pbutton); 
 }
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", InsertButtonPos__FP6BUTTONP3PNTP6VECTOR);
@@ -83,9 +152,20 @@ INCLUDE_ASM("asm/nonmatchings/P2/button", InsertButtonMat__FP6BUTTONP3XFMP7MATRI
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", PostButtonLoad__FP6BUTTON);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", CloneButton__FP6BUTTONT0);
+void CloneButton(BUTTON* pbuttonNew, BUTTON* pbuttonSrc)
+{
+    int ichkPushed = pbuttonNew->btn.ichkPushed;
+    
+    CloneSo(pbuttonNew, pbuttonSrc);
+    
+    pbuttonNew->btn.ichkPushed = ichkPushed;
+    pbuttonNew->btn.paloOwner = pbuttonNew;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", SetButtonButtons__FP6BUTTON7BUTTONS);
+void SetButtonButtons(BUTTON* pbutton, BUTTONS buttons)
+{
+    SetBtnButtons(&pbutton->btn, buttons);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", FCheckButtonObject__FP6BUTTONP2SO);
 
@@ -99,41 +179,122 @@ INCLUDE_ASM("asm/nonmatchings/P2/button", UpdateButtonInternalXps__FP6BUTTON);
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", UpdateButton__FP6BUTTONf);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", FAbsorbButtonWkr__FP6BUTTONP3WKR);
+int FAbsorbButtonWkr(BUTTON* pbutton, WKR* pwkr)
+{
+    int fAbsorbed = FAbsorbSoWkr(pbutton, pwkr);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", InitVolbtn__FP6VOLBTN);
+    if (fAbsorbed && 
+        (pwkr->grfic & 0x4) == 0 && 
+        pbutton->unk_550 == 3 && 
+        pbutton->btn.buttons == BUTTONS_NoContact)
+    {
+        SetButtonButtons(pbutton, BUTTONS_Contact);
+    }
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", LoadVolbtnFromBrx__FP6VOLBTNP18CBinaryInputStream);
+    return fAbsorbed;
+}
+
+void InitVolbtn(VOLBTN* pvolbtn)
+{
+    InitSo(pvolbtn);
+    
+    InitBtn(&pvolbtn->btn);
+    
+    pvolbtn->grfVolbtn |= 0x80000000000ULL;
+    
+    SetSoConstraints(pvolbtn, (CT)3, 0, (CT)3, 0);
+}
+
+void LoadVolbtnFromBrx(VOLBTN* pvolbtn, CBinaryInputStream* pbis)
+{
+    LoadSoFromBrx(pvolbtn, pbis);
+    LoadBtn(&pvolbtn->btn, pvolbtn);
+    
+    if (pvolbtn->unk_790 != 0)
+    {
+        pvolbtn->btn.fManualReset = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", PostVolbtnLoad__FP6VOLBTN);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", CloneVolbtn__FP6VOLBTNT0);
+void CloneVolbtn(VOLBTN* pvolbtnNew, VOLBTN* pvolbtnSrc)
+{
+    int ichkPushed = pvolbtnNew->btn.ichkPushed;
+    
+    CloneSo(pvolbtnNew, pvolbtnSrc);
+    
+    pvolbtnNew->btn.ichkPushed = ichkPushed;
+    pvolbtnNew->btn.paloOwner = pvolbtnNew;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", SetVolbtnButtons__FP6VOLBTN7BUTTONS);
+
+void SetVolbtnButtons(VOLBTN* pvolbtn, BUTTONS buttons)
+{
+    SetBtnButtons(&pvolbtn->btn, buttons);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", UpdateVolbtn__FP6VOLBTNf);
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", FGetVolbtnPushObjectsWithinList__FP6VOLBTNPv);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddBtnAseg__FP3BTNP3ALO3OID);
+void AddBtnAseg(BTN* pbtn, ALO* palo, OID oid)
+{
+    FAddAshOid(pbtn->aash, oid);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddButtonAseg__FP6BUTTON3OID);
+void AddButtonAseg(BUTTON* pbutton, OID oid)
+{
+    AddBtnAseg(&pbutton->btn, pbutton, oid);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddVolbtnAseg__FP6VOLBTN3OID);
+void AddVolbtnAseg(VOLBTN* pvolbtn, OID oid)
+{
+    AddBtnAseg(&pvolbtn->btn, pvolbtn, oid);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddBtnOffAseg__FP3BTNP3ALO3OID);
+void AddBtnOffAseg(BTN* pbtn, ALO* palo, OID oid)
+{
+    FAddAshOid(&pbtn->aash[1], oid);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddButtonOffAseg__FP6BUTTON3OID);
+void AddButtonOffAseg(BUTTON* pbutton, OID oid)
+{
+    AddBtnOffAseg(&pbutton->btn, pbutton, oid);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddVolbtnOffAseg__FP6VOLBTN3OID);
+void AddVolbtnOffAseg(VOLBTN* pvolbtn, OID oid)
+{
+    AddBtnOffAseg(&pvolbtn->btn, pvolbtn, oid);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddButtonPushObject__FP6BUTTON3OID);
+void AddButtonPushObject(BUTTON* pbutton, OID oid)
+{
+    int c = pbutton->cPushObjects;
+    pbutton->aoidPushObjects[c] = oid;
+    pbutton->cPushObjects = c + 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddButtonNoPushObject__FP6BUTTON3OID);
+void AddButtonNoPushObject(BUTTON* pbutton, OID oid)
+{
+    int c = pbutton->cNoPushObjects;
+    pbutton->aoidNoPushObjects[c] = oid;
+    pbutton->cNoPushObjects = c + 1;
+};
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddButtonPushClass__FP6BUTTON3CID);
+void AddButtonPushClass(BUTTON* pbutton, CID cid)
+{
+    int c = pbutton->cPushClasses;
+    pbutton->acidPushClasses[c] = cid;
+    pbutton->cPushClasses = c + 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", AddButtonNoPushClass__FP6BUTTON3CID);
+void AddButtonNoPushClass(BUTTON* pbutton, CID cid)
+{    
+    int c = pbutton->cNoPushClasses;
+    pbutton->acidNoPushClasses[c] = cid;
+    pbutton->cNoPushClasses = c + 1;
+}
 
 void AddVolbtnPushObject(VOLBTN *pvolbtn, OID oid)
 {
@@ -144,7 +305,7 @@ void AddVolbtnPushObject(VOLBTN *pvolbtn, OID oid)
 
 void SetButtonRsmg(BUTTON *pbutton, int fOnTrigger, OID oidRoot, OID oidSM, OID oidGoal)
 {
-    SetBtnRsmg(&STRUCT_OFFSET(pbutton, 0x554, BTN), fOnTrigger, oidRoot, oidSM, oidGoal); // pbutton->btn
+    SetBtnRsmg(&pbutton->btn, fOnTrigger, oidRoot, oidSM, oidGoal); 
 }
 
 void SetVolbtnRsmg(VOLBTN *pvolbtn, int fOnTrigger, OID oidRoot, OID oidSM, OID oidGoal)

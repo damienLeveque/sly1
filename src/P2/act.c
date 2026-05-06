@@ -233,8 +233,6 @@ INCLUDE_ASM("asm/nonmatchings/P2/act", CalculateAloRotationSpring__FP3ALOfP7MATR
 
 INCLUDE_ASM("asm/nonmatchings/P2/act", ProjectActRotation__FP3ACT);
 
-// INCLUDE_ASM("asm/nonmatchings/P2/act", ProjectActPose__FP3ACTi);
-
 void ProjectActPose(ACT* pact, int iPose)
 {
     float fTarget = pact->pvtact->pfnGetPoseTarget(pact, iPose);

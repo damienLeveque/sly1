@@ -51,7 +51,8 @@ struct ASEG_FRAME
 {
     /* 0x00 */ int pad_00[3];
     /* 0x0C */ ACT *pactScale;    
-    /* 0x10 */ int pad_10[2];
+    /* 0x10 */ ACT *pactTwist;
+    /* 0x14 */ int pad_14[1];
     /* 0x18 */ ACT **apactPoses;   
 }; // Total size: 0x1C (28 bytes)
 /**

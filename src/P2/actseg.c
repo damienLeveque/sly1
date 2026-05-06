@@ -30,9 +30,58 @@ INCLUDE_ASM("asm/nonmatchings/P2/actseg", GetActsegPositionGoal__FP6ACTSEGfP6VEC
 
 INCLUDE_ASM("asm/nonmatchings/P2/actseg", GetActsegRotationGoal__FP6ACTSEGfP7MATRIX3P6VECTOR);
 
-INCLUDE_ASM("asm/nonmatchings/P2/actseg", GetActsegTwistGoal__FP6ACTSEGPfT1);
+void GetActsegTwistGoal(ACTSEG* pactseg, float* pf1, float* pf2)
+{
+    ASEGA* pasega = pactseg->pasega;
+    ASEG_FRAME* pframe = pasega->paseg->aasegframe + pactseg->iAsegd;
+    ACT* pactTwist = pframe->pactTwist;
+    ALO* palo = pactseg->palo;
 
-INCLUDE_ASM("asm/nonmatchings/P2/actseg", GetActsegScale__FP6ACTSEGP7MATRIX3);
+    if (pactTwist != 0)
+    {
+        typedef void (*PfnTwistEval)(ACT*, ALO*, int, float*, float*, float, float);
+        
+        ((PfnTwistEval)pactTwist->pvtact->pfnInit)(
+            pactTwist,
+            palo,
+            0,
+            pf1,
+            pf2,
+            pasega->tStart,
+            pasega->tEnd
+        );
+    }
+    else
+    {
+        GetActTwistGoal((ACT*)pactseg, pf1, pf2);
+    }
+}
+
+void GetActsegScale(ACTSEG* pactseg, MATRIX3* pmat)
+{
+    ASEGA* pasega = pactseg->pasega;
+    ASEG_FRAME* pframe = pasega->paseg->aasegframe + pactseg->iAsegd;
+    ACT* pactScale = pframe->pactScale;
+    
+    ALO* palo = pactseg->palo;
+    
+    if (pactScale != 0)
+    {
+        typedef void (*PfnScaleEval)(ACT*, ALO*, void*, MATRIX3*, float);
+        
+        ((PfnScaleEval)pactScale->pvtact->pfnInit)(
+            pactScale,
+            palo,
+            0,
+            pmat,
+            pasega->tStart
+        );
+    }
+    else
+    {
+        GetActScale(pactseg, pmat);
+    }
+}
 
 float GGetActsegPoseGoal(ACTSEG* pactseg, int iPose)
 {

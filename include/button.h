@@ -70,7 +70,7 @@ struct BTN
     int fReapplyAseg;
     int fManualReset;
     /* 0x140 */ OID oidDialog;
-    // DIALOG *pdialog;
+    void *pdialog; //Change to actual dialog struct when known.
     int crsmg;
     RSMG arsmg[8];
 };
@@ -81,12 +81,15 @@ struct BTN
  */
 struct VOLBTN : public SO
 {
-    // ...
+    /* 0x480 */ char pad_to_538[0x538 - 0x480]; 
+    /* 0x538 */ u64 grfVolbtn;
+    /* 0x540 */ char pad_to_550[0x550 - 0x540];
     /* 0x550 */ int coidPush;
     /* 0x554 */ OID aoidPush[8];
-    //...
-    /* 0x5c0 */ BTN btn;
-    // ...
+    /* 0x574 */ char pad_to_5C0[0x5C0 - 0x574];
+    /* 0x5C0 */ BTN btn;
+    /* 0x78C */ int unk_78C;
+    /* 0x790 */ int unk_790; 
 };
 
 /**
@@ -95,9 +98,17 @@ struct VOLBTN : public SO
  */
 struct BUTTON : public SO
 {
-    // ...
+    int unk_button_data[52];
+    /* 0x550 */ int unk_550;
     /* 0x554 */ BTN btn;
-    // ...
+    /* 0x720 */ int cPushObjects;
+    /* 0x724 */ OID aoidPushObjects[8]; 
+    /* 0x744 */ int cNoPushObjects;
+    /* 0x748 */ OID aoidNoPushObjects[8]; 
+    /* 0x768 */ int cPushClasses;
+    /* 0x76C */ CID acidPushClasses[8];
+    /* 0x78C */ int cNoPushClasses;
+    /* 0x790 */ CID acidNoPushClasses[8];
 };
 
 void PostAshLoad(SW *psw, ASH *pash, ALO *paloOwner);
