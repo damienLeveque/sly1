@@ -2,6 +2,7 @@
 #include <chkpnt.h>
 #include <find.h>
 #include <alo.h>
+#include <spliceobj.h>
 
 void PostAshLoad(SW *psw, ASH *pash, ALO *palo)
 {
@@ -59,9 +60,51 @@ void InitBtn(BTN *pbtn)
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", LoadBtn__FP3BTNP3ALO);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", PostBtnLoad__FP3BTN);
+void PostBtnLoad(BTN* pbtn)
+{
+    pbtn->buttons = BUTTONS_Nil;
+    
+    SW* psw = pbtn->paloOwner->psw;
+    
+    for (int i = 0; i < 2; i++)
+    {
+        PostAshLoad(psw, &pbtn->aash[i], pbtn->paloOwner);
+    }
+    
+    if (pbtn->fCheckpointed != 0)
+    {
+        if (FGetChkmgrIchk(&g_chkmgr, pbtn->ichkPushed))
+        {
+            PostSwCallback(
+                psw, 
+                (void (*)(void*, MSGID, void*))RestoreBtnFromCheckpointCallback, 
+                pbtn, 
+                (MSGID)0, 
+                0
+            );
+        }
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", RestoreBtnFromCheckpointCallback__FP3BTN5MSGIDPv);
+void RestoreBtnFromCheckpointCallback(BTN* pbtn, MSGID msgid, void* pvContext)
+{
+
+    if (msgid == 0)
+    {
+        PostSwCallback(
+            pbtn->paloOwner->psw, 
+            (void (*)(void*, MSGID, void*))RestoreBtnFromCheckpointCallback, 
+            pbtn, 
+            (MSGID)12, 
+            0
+        );
+    }
+    else
+    {
+        TriggerBtn(pbtn, 1, 1);
+    }
+}
+
 
 void SetBtnRsmg(BTN* pbtn, int irsmg, OID oid1, OID oid2, OID oid3)
 {
@@ -94,7 +137,56 @@ void SetBtnButtons(BTN* pbtn, BUTTONS buttons)
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", FAddRsmg__FP4RSMGiPii3OIDN24);
+int FAddRsmg(RSMG* prsmg, int cMax, int* pc, int irsmg, OID oid1, OID oid2, OID oid3)
+{
+    for (int i = 0; i < *pc; i++)
+    {
+        if (prsmg[i].oidRoot != oid1)
+        {
+            continue;
+        }
+
+        if (prsmg[i].oidSM != -1 && prsmg[i].oidSM != oid2)
+        {
+            continue;
+        }
+
+        if (irsmg != 0)
+        {
+            prsmg[i].oidTriggerGoal = oid3;
+        }
+        else
+        {
+            prsmg[i].oidUntriggerGoal = oid3;
+        }
+
+        return 1;
+    }
+    
+    if (*pc + 1 >= cMax)
+    {
+        return 0;
+    }
+
+    RSMG* pNew = (RSMG*)((*pc * sizeof(RSMG)) + (int)prsmg);
+    *pc = *pc + 1;
+
+    pNew->oidRoot = oid1;
+    pNew->oidSM = oid2;
+
+    if (irsmg != 0)
+    {
+        pNew->oidTriggerGoal = oid3;
+        pNew->oidUntriggerGoal = (OID)-1;
+    }
+    else
+    {
+        pNew->oidTriggerGoal = (OID)-1;
+        pNew->oidUntriggerGoal = oid3;
+    }
+
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", TriggerRsmg__FP2SWiP4RSMGP2LOi);
 
@@ -171,9 +263,90 @@ INCLUDE_ASM("asm/nonmatchings/P2/button", FCheckButtonObject__FP6BUTTONP2SO);
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", IposFindButtonClosest__FP6BUTTONPf);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", ImatFindButtonClosest__FP6BUTTONPf);
+int ImatFindButtonClosest(BUTTON* pbutton, float* pf)
+{
+    float bestValue = 0.0f;
+    int count = pbutton->cmat;
+    
+    if (count == 0)
+    {
+        return 0;
+    }
+    
+    int bestIndex;
+    
+    for (int i = count - 1; i >= 0; i--)
+    {
+        MATRIX3 dmat;
+        
+        CalculateDmat((MATRIX3*)((char*)pbutton + 0xD0), (MATRIX3*)&pbutton->amat[i], &dmat);
+        
+        float val = CosRotateMatrixMagnitude(&dmat);
+        
+        if (bestValue < val)
+        {
+            bestValue = val;
+            bestIndex = i;
+        }
+    }
+    
+    if (pf != 0)
+    {
+        *pf = func_00205578(bestValue);
+    }
+    
+    return bestIndex;
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", PresetButtonAccel__FP6BUTTONf);
+void PresetButtonAccel(BUTTON* pbutton, float f)
+{
+    PresetSoAccel(pbutton, f);
+
+    switch (pbutton->unk_550)
+    {
+        case 0:
+            if (pbutton->cpos != 0)
+            {
+                VECTOR4* pvecGoal = pbutton->apos;
+                
+                if (pbutton->btn.buttons != BUTTONS_Reset)
+                {
+                    pvecGoal += pbutton->iGoal;
+                }
+
+                AccelSoTowardPosSpring(
+                    pbutton, 
+                    (VECTOR*)pvecGoal, 
+                    pbutton->pclqPosSpring, 
+                    &D_00248D30, 
+                    pbutton->pclwPosDamping, 
+                    f
+                );
+            }
+            break;
+
+        case 1:
+            if (pbutton->cmat != 0)
+            {
+                MATRIX3_ALIGNED* pmatGoal = pbutton->amat;
+                
+                if (pbutton->btn.buttons != BUTTONS_Reset)
+                {
+                    pmatGoal += pbutton->iGoal;
+                }
+
+                AccelSoTowardMatSpring(
+                    pbutton, 
+                    (MATRIX3*)pmatGoal, 
+                    pbutton->pclqRotSpring, 
+                    &D_00248D30, 
+                    pbutton->pclqRotDamping, 
+                    f
+                );
+            }
+            break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", UpdateButtonInternalXps__FP6BUTTON);
 
@@ -216,7 +389,28 @@ void LoadVolbtnFromBrx(VOLBTN* pvolbtn, CBinaryInputStream* pbis)
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", PostVolbtnLoad__FP6VOLBTN);
+void PostVolbtnLoad(VOLBTN* pvolbtn)
+{
+    PostAloLoad(pvolbtn);
+    PostBtnLoad(&pvolbtn->btn);
+    SetVolbtnButtons(pvolbtn, BUTTONS_NoContact);
+    
+
+    for (int i = 0; i < pvolbtn->coidPush; i++)
+    {
+        LO* plo = PloFindSwNearest(pvolbtn->psw, pvolbtn->aoidPush[i], pvolbtn);
+        
+        if (plo != 0)
+        {
+            pvolbtn->aploPush[pvolbtn->cploPush++] = plo;
+        }
+    }
+    
+    if (pvolbtn->coidPush == 0)
+    {
+        pvolbtn->fUnk5BC = 1;
+    }
+}
 
 void CloneVolbtn(VOLBTN* pvolbtnNew, VOLBTN* pvolbtnSrc)
 {
@@ -236,7 +430,18 @@ void SetVolbtnButtons(VOLBTN* pvolbtn, BUTTONS buttons)
 
 INCLUDE_ASM("asm/nonmatchings/P2/button", UpdateVolbtn__FP6VOLBTNf);
 
-INCLUDE_ASM("asm/nonmatchings/P2/button", FGetVolbtnPushObjectsWithinList__FP6VOLBTNPv);
+int FGetVolbtnPushObjectsWithinList(VOLBTN* pvolbtn, void* pList)
+{
+    for (int i = 0; i < pvolbtn->cPushObjects; i++)
+    {
+        if (!FAppendSpliceListElement(pList, &pvolbtn->aoidPushObjects[i]))
+        {
+            return 0;
+        }
+    }
+    
+    return 1;
+}
 
 void AddBtnAseg(BTN* pbtn, ALO* palo, OID oid)
 {

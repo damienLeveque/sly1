@@ -13,6 +13,8 @@
 
 // Forward.
 struct ASEG;
+extern VECTOR D_00248D30;
+extern "C" float func_00205578(float);
 
 /**
  * @brief Unknown.
@@ -86,7 +88,11 @@ struct VOLBTN : public SO
     /* 0x540 */ char pad_to_550[0x550 - 0x540];
     /* 0x550 */ int coidPush;
     /* 0x554 */ OID aoidPush[8];
-    /* 0x574 */ char pad_to_5C0[0x5C0 - 0x574];
+    /* 0x574 */ int cploPush;
+    /* 0x578 */ LO* aploPush[8];
+    /* 0x598 */ int cPushObjects;
+    /* 0x59C */ OID aoidPushObjects[8];
+    /* 0x5BC */ int fUnk5BC;
     /* 0x5C0 */ BTN btn;
     /* 0x78C */ int unk_78C;
     /* 0x790 */ int unk_790; 
@@ -98,7 +104,7 @@ struct VOLBTN : public SO
  */
 struct BUTTON : public SO
 {
-    int unk_button_data[52];
+    int unk_button_data[52]; 
     /* 0x550 */ int unk_550;
     /* 0x554 */ BTN btn;
     /* 0x720 */ int cPushObjects;
@@ -109,6 +115,13 @@ struct BUTTON : public SO
     /* 0x76C */ CID acidPushClasses[8];
     /* 0x78C */ int cNoPushClasses;
     /* 0x790 */ CID acidNoPushClasses[8];
+    /* 0x7B0 */ int iGoal;
+    /* 0x7B4 */ int cpos;
+    /* 0x7B8 */ int pad_7B8[2];
+    /* 0x7C0 */ VECTOR4 apos[2]; 
+    /* 0x7E0 */ int cmat;
+    /* 0x7E4 */ int pad_7E4[3];
+    /* 0x7F0 */ MATRIX3_ALIGNED amat[8];
 };
 
 void PostAshLoad(SW *psw, ASH *pash, ALO *paloOwner);
