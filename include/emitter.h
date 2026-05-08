@@ -116,13 +116,29 @@ struct EMITG
  */
 struct EMITTER : public ALO
 {
-    // ...
+    /* 0x2CC */ int pad_2CC; 
+    
+    /* 0x2D4 */ OID oidUnknown1;
+    /* 0x2D8 */ OID oidUnknown2;
+    /* 0x2DC */ float gEmissionRate; // Initialized to 10.0f
+    /* 0x2E0 */ float gEmissionLife; // Initialized to 10.0f
+    
+    /* 0x2E4 */ int pad_2E4[5]; 
+    
+    // 4 contiguous OIDs (0x2F8, 0x2FC, 0x300, 0x304)
+    /* 0x2F8 */ OID aoidEmit[4]; 
+    
     /* 0x308 */ int fAutoPause;
-    /* 0x30c */ STRUCT_PADDING(13);
+    
+    // 2 contiguous OIDs (0x30C, 0x310)
+    /* 0x30C */ OID aoidTarget[2]; 
+    
+    /* 0x314 */ DL dlParticles; 
+    
+    /* 0x320 */ int pad_320[8]; 
+    
     /* 0x340 */ float tUnpause;
-    /* 0x344 */ STRUCT_PADDING(2);
-    /* 0x34c */ int fValuesChanged;
-    // ...
+    /* 0x344 */ int fValuesChanged;
 };
 
 void InitEmitb(EMITB *pemitb);

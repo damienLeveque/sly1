@@ -4,7 +4,27 @@ extern float DAT_0024a124;
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", InitEmitb__FP5EMITB);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", InitEmitter__FP7EMITTER);
+void InitEmitter(EMITTER* pemitter)
+{
+    InitAlo(pemitter);
+
+    pemitter->oidUnknown2 = OID_Nil;   
+    
+    pemitter->gEmissionLife = 10.0f;   
+    pemitter->gEmissionRate = 10.0f;   
+    pemitter->tUnpause = -1.0f;        
+
+    pemitter->aoidEmit[0] = OID_Nil;   
+    pemitter->aoidEmit[1] = OID_Nil;   
+    pemitter->aoidEmit[3] = OID_Nil;   
+
+    pemitter->aoidEmit[2] = OID_Nil;   
+    pemitter->aoidTarget[0] = OID_Nil; 
+    pemitter->oidUnknown1 = OID_Nil;   
+    pemitter->aoidTarget[1] = OID_Nil; 
+
+    InitDl(&pemitter->dlParticles, 0x320);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", LoadEmitmeshFromBrx__FP8EMITMESHP18CBinaryInputStream);
 
@@ -163,7 +183,11 @@ INCLUDE_ASM("asm/nonmatchings/P2/emitter", SetEmitdvEmitb__FP6EMITDVP5EMITB);
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", CalculateEmitdvMatrix__FP6EMITDVfP7MATRIX4);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", PostExplLoad__FP4EXPL);
+void PostExplLoad(EXPL* pexpl)
+{
+    PostLoLoad(pexpl);
+    pexpl->pvtlo->pfnRemoveLo(pexpl);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", CalculateExplTransform__FP4EXPLP6VECTORP7MATRIX3);
 
@@ -184,7 +208,12 @@ INCLUDE_ASM("asm/nonmatchings/P2/emitter", BindExplg__FP5EXPLG);
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", ExplodeExplgExplso__FP5EXPLGP6EXPLSO);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", InitExplo__FP5EXPLO);
+void InitExplo(EXPLO* pexplo)
+{
+    InitXfm(pexplo);
+    pexplo->oid94 = OID_Nil;
+    pexplo->oid98 = OID_Nil;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", LoadExploFromBrx__FP5EXPLOP18CBinaryInputStream);
 
@@ -201,7 +230,14 @@ INCLUDE_ASM("asm/nonmatchings/P2/emitter", AddExploSkeleton__FP5EXPLO3OIDT1ffff)
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", PemitbEnsureExplo__FP5EXPLO4ENSK);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", InitExpls__FP5EXPLS);
+void InitExpls(EXPLS* pexpls)
+{
+    InitExplo(pexpls);
+    
+    pexpls->oidAC = OID_Nil;
+    pexpls->oidB0 = OID_Nil;
+    pexpls->oidB4 = OID_Nil;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", BindExpls__FP5EXPLS);
 

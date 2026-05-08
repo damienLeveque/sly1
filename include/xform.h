@@ -51,7 +51,7 @@ struct XFM : public LO
  */
 struct EXPL : public XFM
 {
-    // ...
+    STRUCT_PADDING(8);
 };
 
 /**
@@ -69,7 +69,8 @@ struct EXPLG : public EXPL
  */
 struct EXPLO : public EXPL
 {
-    // ...
+    /* 0x94 */ OID oid94;
+    /* 0x98 */ OID oid98;
 };
 
 /**
@@ -78,7 +79,10 @@ struct EXPLO : public EXPL
  */
 struct EXPLS : public EXPLO
 {
-    // ...
+    /* 0x09C */ int pad_9C[4];
+    /* 0x0AC */ OID oidAC;
+    /* 0x0B0 */ OID oidB0;
+    /* 0x0B4 */ OID oidB4;
 };
 
 /**
