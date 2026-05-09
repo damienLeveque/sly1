@@ -65,7 +65,8 @@ struct ASEG : public LO
     /* 0x3C */ ASEG_FRAME *aasegframe; 
     /* 0x40 */ int pad_40[11];        
     /* 0x6C */ DL dlAsega;
-    /* 0x78 */ STRUCT_PADDING(2);
+    /* 0x78 */ int unk_78;
+    /* 0x7C */ LO* ploParent; // The object the emitter binds to!
     /* 0x80 */ CLQ clqMasterSuck;
     /* 0x90 */ LM lmMasterSuck;
     /* 0x98 */ float svtMasterSuck;

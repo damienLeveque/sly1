@@ -32,6 +32,7 @@ struct EXPLSO;
 struct EXPLSTE;
 struct CAMERA;
 struct ASEG;
+struct EMITB;
 
 /**
  * @class TRANSFORM
@@ -51,7 +52,9 @@ struct XFM : public LO
  */
 struct EXPL : public XFM
 {
-    STRUCT_PADDING(8);
+    /* 0x74 */ STRUCT_PADDING(3); 
+    /* 0x80 */ EXPLG* pexplg;
+    /* 0x84 */ STRUCT_PADDING(3); 
 };
 
 /**
@@ -60,7 +63,8 @@ struct EXPL : public XFM
  */
 struct EXPLG : public EXPL
 {
-    // ...
+    /* 0x90 */ int cExpl;
+    /* 0x94 */ EXPL* apexpl[1];
 };
 
 /**
@@ -69,6 +73,7 @@ struct EXPLG : public EXPL
  */
 struct EXPLO : public EXPL
 {
+    /* 0x90 */ EMITB* pemitb;
     /* 0x94 */ OID oid94;
     /* 0x98 */ OID oid98;
 };
@@ -79,18 +84,27 @@ struct EXPLO : public EXPL
  */
 struct EXPLS : public EXPLO
 {
-    /* 0x09C */ int pad_9C[4];
+    /* 0x09C */ STRUCT_PADDING(1);
+    /* 0x0A0 */ SFX* psfx;
+    /* 0x0A4 */ STRUCT_PADDING(2);
     /* 0x0AC */ OID oidAC;
     /* 0x0B0 */ OID oidB0;
     /* 0x0B4 */ OID oidB4;
 };
 
 /**
- * @brief Unknown.
+ * @brief Explosion parameters passed to explosion handlers.
  */
 struct EXPLSO
 {
-    // ...
+    /* 0x00 */ unsigned int grfExplode; // Bitfield of explosion flags
+    /* 0x04 */ ALO* paloSource;         // The object that caused the explosion
+    /* 0x08 */ STRUCT_PADDING(2);          // Pads to 16 bytes for qword alignment
+    /* 0x10 */ qword posImpact;         // Exact world coordinate of the blast
+    /* 0x20 */ qword vecForce;          // Directional vector of the shockwave
+    /* 0x30 */ float sRadius;           // Blast radius
+    /* 0x34 */ float gPower;            // Damage or physical impulse strength
+    /* 0x38 */ STRUCT_PADDING(6);           // Pads out to the full 0x50 bytes
 };
 
 /**

@@ -68,7 +68,9 @@ struct SW : public LO
     /* 0x1c9c */ DL dlLanding;
     /* 0x1ca8 */ STRUCT_PADDING(9); // Likely 3 DL's.
     /* 0x1ccc */ DL dlCrfod;
-    /* 0x1cd8 */ STRUCT_PADDING(36);
+    /* 0x1cd8 */ STRUCT_PADDING(13);
+    /* 0x1d0c */ EXPL* pexplStandardSmoke; 
+    /* 0x1d10 */ STRUCT_PADDING(22);
     /* 0x1d68 */ LSM lsmDefault;
     /* 0x1d70 */ STRUCT_PADDING(85);
     /* 0x1ec4 */ VISMAP *pvismap;

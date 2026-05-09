@@ -1,6 +1,8 @@
 #include <emitter.h>
+#include <sce/memset.h>
+#include <memory.h>
 
-extern float DAT_0024a124;
+
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", InitEmitb__FP5EMITB);
 
@@ -8,7 +10,7 @@ void InitEmitter(EMITTER* pemitter)
 {
     InitAlo(pemitter);
 
-    pemitter->oidUnknown2 = OID_Nil;   
+    pemitter->cEmitRemain = -1;   
     
     pemitter->gEmissionLife = 10.0f;   
     pemitter->gEmissionRate = 10.0f;   
@@ -20,7 +22,7 @@ void InitEmitter(EMITTER* pemitter)
 
     pemitter->aoidEmit[2] = OID_Nil;   
     pemitter->aoidTarget[0] = OID_Nil; 
-    pemitter->oidUnknown1 = OID_Nil;   
+    pemitter->nMode = -1;   
     pemitter->aoidTarget[1] = OID_Nil; 
 
     InitDl(&pemitter->dlParticles, 0x320);
@@ -35,18 +37,64 @@ INCLUDE_ASM("asm/nonmatchings/P2/emitter", LoadEmitterFromBrx__FP7EMITTERP18CBin
 void CloneEmitter(EMITTER *pemitter, EMITTER *pemitterBase)
 {
     CloneAlo(pemitter, pemitterBase);
-    STRUCT_OFFSET(pemitter, 0x2d0, EMITB *)->cref++;
+    STRUCT_OFFSET(pemitter, 0x2d0, EMITB *)->cRef++;
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", BindEmitterCallback__FP7EMITTER5MSGIDPv);
+void BindEmitterCallback(EMITTER* pemitter, MSGID msgid, void* pv)
+{
+    pemitter->pvtlo->pfnSetLoParent(pemitter, pemitter->paseg->ploParent);
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", BindEmitter__FP7EMITTER);
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", PostEmitterLoad__FP7EMITTER);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", HandleEmitterMessage__FP7EMITTER5MSGIDPv);
+void HandleEmitterMessage(EMITTER* pemitter, MSGID msgid, void* pv)
+{
+    if (msgid == 2)
+    {
+        LO* plo = (LO*)pv;
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", PemitbCopyOnWrite__FP5EMITB);
+        if (plo == pemitter->ploUnk344)
+        {
+            plo->pvtlo->pfnUnsubscribeLoObject(plo, pemitter);
+            pemitter->ploUnk344 = 0;
+        }
+        else if (plo == pemitter->ploUnk348)
+        {
+            plo->pvtlo->pfnUnsubscribeLoObject(plo, pemitter);
+            pemitter->ploUnk348 = 0;
+        }
+    }
+}
+
+EMITB* PemitbCopyOnWrite(EMITB* pemitb)
+{
+    if (pemitb->cRef < 2)
+    {
+        return pemitb;
+    }
+
+    EMITB* pemitbNew = (EMITB*)PvAllocSwCopyImpl(0x200, pemitb);
+
+    if (pemitb->emito.emitk == 3)
+    {
+        if (pemitb->emito.pElements != 0)
+        {
+            pemitbNew->emito.pElements = PvAllocSwCopyImpl(
+                pemitb->emito.cElements * 0x28, 
+                pemitb->emito.pElements
+            );
+        }
+    }
+
+    pemitbNew->cRef = 1;
+    
+    pemitb->cRef--;
+
+    return pemitbNew;
+}
+
 
 EMITB *PemitbEnsureEmitter(EMITTER *pemitter, ENSK ensk)
 {
@@ -96,7 +144,26 @@ void UnpauseEmitter(EMITTER *pemitter)
     STRUCT_OFFSET(pemitter, 0x340, float) = -1.0f; // pemitter->tUnpause
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", FPausedEmitter__FP7EMITTER);
+int FPausedEmitter(EMITTER* pemitter)
+{
+    if (g_clock.t < pemitter->tUnpause)
+    {
+        return 1;
+    }
+
+    if (pemitter->nMode < 2)
+    {
+        if (pemitter->nMode >= 0)
+        {
+            if (pemitter->cEmitRemain == 0)
+            {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
 
 void SetEmitterEnabled(EMITTER *pemitter, int fEnabled)
 {
@@ -145,7 +212,23 @@ void SetExploRipt(EXPLO *pexplo, RIPT ript)
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", WakeSoWater__FP2SOP5WATERfP6VECTORT3ff);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", StandardSmokeCloud__FP6VECTORf);
+void StandardSmokeCloud(VECTOR* pvecPos, float gPower)
+{
+    EXPL* pexpl = g_psw->pexplStandardSmoke;
+    
+    if (pexpl != 0)
+    {
+        EXPLSO explso;
+
+        explso.sRadius = 0.0f;        
+        explso.vecForce = *(qword*)pvecPos;
+        explso.grfExplode = 12; 
+        explso.gPower = gPower;
+
+        typedef void (*PfnGetLoParams)(EXPL*, EXPLSO*);
+        ((PfnGetLoParams)pexpl->pvtlo->pfnGetLoParams)(pexpl, &explso);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", ChooseEmitoPos__FP5EMITOiiP6VECTORT3);
 
@@ -191,9 +274,32 @@ void PostExplLoad(EXPL* pexpl)
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", CalculateExplTransform__FP4EXPLP6VECTORP7MATRIX3);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", ExplodeExpl__FP4EXPL);
+void ExplodeExpl(EXPL* pexpl)
+{
+    EXPLSO explso;
+    
+    memset(&explso, 0, sizeof(EXPLSO));
+    
+    typedef void (*PfnGetLoParams)(EXPL*, EXPLSO*);
+    ((PfnGetLoParams)pexpl->pvtlo->pfnGetLoParams)(pexpl, &explso);
+}
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", ExplodeExplParams__FP4EXPLUiP3ALOP6VECTORT3ff);
+void ExplodeExplParams(EXPL* pexpl, unsigned int grfExplode, ALO* paloSource, VECTOR* pposImpact, VECTOR* pvecForce, float sRadius, float gPower)
+{
+    EXPLSO explso;
+
+    explso.grfExplode = grfExplode;
+    explso.paloSource = paloSource;
+    
+    explso.posImpact = *(qword*)pposImpact;
+    explso.vecForce = *(qword*)pvecForce;
+
+    explso.sRadius = sRadius;
+    explso.gPower = gPower;
+
+    typedef void (*PfnGetLoParams)(EXPL*, EXPLSO*);
+    ((PfnGetLoParams)pexpl->pvtlo->pfnGetLoParams)(pexpl, &explso);
+}
 
 void ExplodeExplExplso(EXPL *pexpl, EXPLSO *pexplso)
 {
@@ -202,11 +308,49 @@ void ExplodeExplExplso(EXPL *pexpl, EXPLSO *pexplso)
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", LoadExplgFromBrx__FP5EXPLGP18CBinaryInputStream);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", CloneExplg__FP5EXPLGT0);
+void CloneExplg(EXPLG* pexplgNew, EXPLG* pexplgSrc)
+{
+    CloneLo(pexplgNew, pexplgSrc);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", BindExplg__FP5EXPLG);
+    for (int i = 0; i < pexplgNew->cExpl; i++)
+    {
+        EXPL* pexplClone = (EXPL*)PloCloneLo(
+            pexplgNew->apexpl[i], 
+            pexplgNew->psw, 
+            pexplgNew->paloParent
+        );
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", ExplodeExplgExplso__FP5EXPLGP6EXPLSO);
+        pexplClone->pvtlo->pfnRemoveLo(pexplClone);
+
+        pexplgNew->apexpl[i] = pexplClone;
+        
+        pexplClone->pexplg = pexplgNew;
+    }
+}
+
+void BindExplg(EXPLG* pexplg)
+{
+    for (int i = 0; i < pexplg->cExpl; i++)
+    {
+        EXPL* pexpl = pexplg->apexpl[i];
+        
+        if (pexpl->pvtlo->pfnBindLo != 0)
+        {
+            pexpl->pvtlo->pfnBindLo(pexpl);
+        }
+    }
+}
+
+void ExplodeExplgExplso(EXPLG* pexplg, EXPLSO* pexplso)
+{
+    for (int i = 0; i < pexplg->cExpl; i++)
+    {
+        EXPL* pexpl = pexplg->apexpl[i];
+        
+        typedef void (*PfnGetLoParams)(EXPL*, EXPLSO*);
+        ((PfnGetLoParams)pexpl->pvtlo->pfnGetLoParams)(pexpl, pexplso);
+    }
+}
 
 void InitExplo(EXPLO* pexplo)
 {
@@ -217,7 +361,12 @@ void InitExplo(EXPLO* pexplo)
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", LoadExploFromBrx__FP5EXPLOP18CBinaryInputStream);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", CloneExplo__FP5EXPLOT0);
+void CloneExplo(EXPLO* pexploNew, EXPLO* pexploSrc)
+{
+    CloneLo(pexploNew, pexploSrc);
+    
+    pexploNew->pemitb->cRef++;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", BindExplo__FP5EXPLO);
 
@@ -226,9 +375,22 @@ void ExplodeExploExplso(EXPLO *pexplo, EXPLSO *pexplso)
     return;
 }
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", AddExploSkeleton__FP5EXPLO3OIDT1ffff);
+void AddExploSkeleton(EXPLO* pexplo, OID oid1, OID oid2, float f1, float f2, float f3, float f4)
+{
+    EMITB* pemitb = PemitbEnsureExplo(pexplo, ENSK_Set);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", PemitbEnsureExplo__FP5EXPLO4ENSK);
+    AddEmitoSkeleton(&pemitb->emito, oid1, oid2, f1, f2, f3, f4, pexplo);
+}
+
+EMITB* PemitbEnsureExplo(EXPLO* pexplo, ENSK ensk)
+{
+    if (ensk == ENSK_Set)
+    {
+        pexplo->pemitb = PemitbCopyOnWrite(pexplo->pemitb);
+    }
+    
+    return pexplo->pemitb;
+}
 
 void InitExpls(EXPLS* pexpls)
 {
@@ -245,7 +407,15 @@ INCLUDE_ASM("asm/nonmatchings/P2/emitter", HandleExplsMessage__FP5EXPLS5MSGIDPv)
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", ExplodeExplsExplso__FP5EXPLSP6EXPLSO);
 
-INCLUDE_ASM("asm/nonmatchings/P2/emitter", PsfxEnsureExpls__FP5EXPLS4ENSK);
+SFX* PsfxEnsureExpls(EXPLS* pexpls, ENSK ensk)
+{
+    if (pexpls->psfx == 0)
+    {
+        NewSfx(&pexpls->psfx);
+    }
+    
+    return pexpls->psfx;
+}
 
 INCLUDE_ASM("asm/nonmatchings/P2/emitter", FireExplsExplso__FP5EXPLSP6EXPLSO);
 

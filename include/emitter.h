@@ -11,11 +11,14 @@
 #include <xform.h>
 #include <rip.h>
 #include <alo.h>
+#include <sound.h>
+#include <aseg.h>
 
 // Forward.
 struct EXPL;
 
 typedef int GRFEXPLSO;
+extern float DAT_0024a124;
 
 /**
  * @brief Unknown.
@@ -86,7 +89,10 @@ struct EMITVX
  */
 struct EMITO
 {
-    // ...
+    /* 0x00 */ int emitk; 
+    /* 0x04 */ int pad_04[3]; // Pads 12 bytes to get to 0x10
+    /* 0x10 */ int cElements; 
+    /* 0x14 */ void* pElements; 
 };
 
 /**
@@ -95,10 +101,11 @@ struct EMITO
  */
 struct EMITB
 {
-    /* 0x00 */ int cref;
-    /* 0x04 */ STRUCT_PADDING(3);
-    /* 0x10 */ EMITO emito;
-    // ...
+    /* 0x000 */ int cRef;
+    /* 0x004 */ int pad_04[3];
+    /* 0x010 */ EMITO emito;  
+    // Pads out to the full 0x200 (512 bytes)
+    /* 0x028 */ int pad_28[118]; 
 };
 
 /**
@@ -116,28 +123,20 @@ struct EMITG
  */
 struct EMITTER : public ALO
 {
-    /* 0x2CC */ int pad_2CC; 
-    
-    /* 0x2D4 */ OID oidUnknown1;
-    /* 0x2D8 */ OID oidUnknown2;
-    /* 0x2DC */ float gEmissionRate; // Initialized to 10.0f
-    /* 0x2E0 */ float gEmissionLife; // Initialized to 10.0f
-    
+    /* 0x2D0 */ ASEG* paseg;
+    /* 0x2D4 */ int nMode;        
+    /* 0x2D8 */ int cEmitRemain;  
+    /* 0x2DC */ float gEmissionRate; 
+    /* 0x2E0 */ float gEmissionLife; 
     /* 0x2E4 */ int pad_2E4[5]; 
-    
-    // 4 contiguous OIDs (0x2F8, 0x2FC, 0x300, 0x304)
     /* 0x2F8 */ OID aoidEmit[4]; 
-    
     /* 0x308 */ int fAutoPause;
-    
-    // 2 contiguous OIDs (0x30C, 0x310)
     /* 0x30C */ OID aoidTarget[2]; 
-    
     /* 0x314 */ DL dlParticles; 
-    
     /* 0x320 */ int pad_320[8]; 
-    
     /* 0x340 */ float tUnpause;
+    /* 0x344 */ LO* ploUnk344;
+    /* 0x348 */ LO* ploUnk348;
     /* 0x344 */ int fValuesChanged;
 };
 

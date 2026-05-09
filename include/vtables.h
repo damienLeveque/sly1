@@ -70,10 +70,10 @@ struct VTLO : VT
     void (*pfnUpdateLoXfWorld)();
     void (*pfnUpdateLoXfWorldHierarchy)();
     void (*pfnFreezeLo)();
-    void (*pfnSetLoParent)();
+    void (*pfnSetLoParent)(LO*, LO*);
     void (*pfnApplyLoProxy)();
-    void (*pfnSubscribeLoObject)();
-    void (*pfnUnsubscribeLoObject)();
+    void (*pfnSubscribeLoObject)(LO*, LO*);
+    void (*pfnUnsubscribeLoObject)(LO*, LO*);
     void (*pfnSubscribeLoStruct)();
     void (*pfnUnsubscribeLoStruct)();
     void (*pfnGetLoParams)();
